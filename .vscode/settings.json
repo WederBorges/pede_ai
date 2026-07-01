@@ -1,4 +1,20 @@
 {
     "python-envs.defaultEnvManager": "ms-python.python:poetry",
-    "python-envs.defaultPackageManager": "ms-python.python:poetry"
+    "python-envs.defaultPackageManager": "ms-python.python:poetry",
+    "python.defaultInterpreterPath": "C:\\Users\\weder\\AppData\\Local\\pypoetry\\Cache\\virtualenvs\\pede-ai-Ne194tsq-py3.12\\Scripts\\python.exe",
+    "python.languageServer": "None",
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.completeFunctionParens": true,
+    "python.analysis.indexing": true,
+    "[python]": {
+        "editor.quickSuggestions": {
+            "other": "on",
+            "comments": "off",
+            "strings": "on"
+        },
+        "editor.suggestOnTriggerCharacters": true,
+        "editor.tabCompletion": "on",
+        "editor.wordBasedSuggestions": "matchingDocuments"
+    }
 }

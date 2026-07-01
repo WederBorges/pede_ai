@@ -1,16 +1,8 @@
-from db.base import Base
-
-from sqlalchemy import String
-from sqlalchemy import Integer
-from sqlalchemy import ForeignKey
-from sqlalchemy import TIMESTAMP
-from sqlalchemy import Boolean
-from sqlalchemy import func
-from sqlalchemy import CheckConstraint
 from datetime import datetime
 
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column 
+from db.base import Base
+from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Integer, String, TIMESTAMP, func
+from sqlalchemy.orm import Mapped, mapped_column
 
 ## empresas
 # id
@@ -19,18 +11,17 @@ from sqlalchemy.orm import mapped_column
 # created_at
 
 class Empresas(Base):
-    
+
     __tablename__ = "empresas"
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
-    nome: Mapped[int] = mapped_column(String(100), nullable=False)
-    centro_de_custo = Mapped[int] = mapped_column(Integer, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
+    nome: Mapped[str] = mapped_column(String(100), nullable=False)
+    centro_de_custo: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now(), nullable=False)
     ativo: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     __table_args__ = (
-        
-        CheckConstraint("centro_de_custo => 0 and codigo <= 999", name="ck_centro_de_custo_3dig")
+        CheckConstraint("centro_de_custo >= 0 and centro_de_custo <= 999", name="ck_centro_de_custo_3dig"),
     )
 
 
@@ -47,10 +38,9 @@ class Filiais(Base):
     __tablename__ = "filiais"
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
-    empresa_id: Mapped[int] = mapped_column(ForeignKey("empresa.id"), nullable=False)
-    nome = Mapped[int] = mapped_column(String(100), nullable=False)
-    cidade: Mapped[datetime] = mapped_column(String(50), nullable=False)
-    estado: Mapped[datetime] = mapped_column(String(50), nullable=False) 
+    empresa_id: Mapped[int] = mapped_column(ForeignKey("empresas.id"), nullable=False)
+    nome: Mapped[str] = mapped_column(String(100), nullable=False)
+    cidade: Mapped[str] = mapped_column(String(50), nullable=False)
+    estado: Mapped[str] = mapped_column(String(50), nullable=False)
     ativo: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    
-
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now(), nullable=False)

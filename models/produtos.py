@@ -1,17 +1,9 @@
-from db.base import Base
-
-from sqlalchemy import String
-from sqlalchemy import Integer
-from sqlalchemy import ForeignKey
-from sqlalchemy import Float
-from sqlalchemy import TIMESTAMP
-from sqlalchemy import Boolean
-from sqlalchemy import func
-from sqlalchemy import CheckConstraint
+from decimal import Decimal
 from datetime import datetime
 
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column 
+from db.base import Base
+from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Numeric, String, TIMESTAMP
+from sqlalchemy.orm import Mapped, mapped_column
 
 ## produtos
 # id
@@ -31,7 +23,11 @@ class Produtos(Base):
     empresa_id: Mapped[int] = mapped_column(ForeignKey("empresas.id"), nullable=False)
     nome: Mapped[str] = mapped_column(String(100), nullable=False)
     descricao: Mapped[str] = mapped_column(String(255), nullable=False)
-    preco: Mapped[float] = mapped_column(Float, nullable=False)
-    imagem_url: Mapped[str] = mapped_column(String(255), nullable=False)
+    preco: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    imagem_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     ativo: Mapped[bool] = mapped_column(Boolean, nullable=False)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
+
+    __table_args__ = (
+        CheckConstraint("preco >= 0", name="ck_preco_uni_positivo"),
+    )

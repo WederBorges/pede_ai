@@ -1,22 +1,14 @@
-from db.base import Base
-
-from sqlalchemy import String
-from sqlalchemy import Integer
-from sqlalchemy import ForeignKey
-from sqlalchemy import TIMESTAMP
-from sqlalchemy import Boolean
-from sqlalchemy import func
-from sqlalchemy import CheckConstraint
-from sqlalchemy import UniqueConstraint
+from decimal import Decimal
 from datetime import datetime
 
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column 
+from db.base import Base
+from sqlalchemy import CheckConstraint, ForeignKey, Integer, Numeric, TIMESTAMP, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column
 
 class Carrinho(Base):
 
     __tablename__ = "carrinho"
-    
+
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), nullable=False)
     filial_id: Mapped[int] = mapped_column(ForeignKey("filiais.id"), nullable=False)
@@ -30,7 +22,7 @@ class CarrinhoItens(Base):
     carrinho_id: Mapped[int] = mapped_column(ForeignKey("carrinho.id"), nullable=False)
     produto_id: Mapped[int] = mapped_column(ForeignKey("produtos.id"), nullable=False)
     quantidade: Mapped[int] = mapped_column(Integer, nullable=False)
-    preco: Mapped[float] = mapped_column(Float, nullable=False)
+    preco: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 
     __table_args__ = (
         CheckConstraint("quantidade > 0", name="ck_quantidade_positiva"),

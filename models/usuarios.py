@@ -7,26 +7,21 @@
 # perfil
 # created_at
 
-from db.base import Base
-
-from sqlalchemy import String
-from sqlalchemy import Integer
-from sqlalchemy import ForeignKey
-from sqlalchemy import TIMESTAMP
-from sqlalchemy import func
 from datetime import datetime
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column 
+
+from db.base import Base
+from sqlalchemy import ForeignKey, String, TIMESTAMP, func
+from sqlalchemy.orm import Mapped, mapped_column
 
 
 class User(Base):
     __tablename__ = "usuarios"
 
-    id: Mapped[str] = mapped_column(primary_key=True)
-    empresa_id: Mapped[int] = mapped_column(ForeignKey)
-    filial_id: Mapped[int] = mapped_column(ForeignKey)
-    nome: Mapped[str] = mapped_column(String(45))
-    email: Mapped[str] = mapped_column(String(100))
-    senha_hash: Mapped[str] = mapped_column(String(100))
-    perfil: Mapped[str] = mapped_column(String(12))
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now())
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    empresa_id: Mapped[int] = mapped_column(ForeignKey("empresas.id"), nullable=False)
+    filial_id: Mapped[int] = mapped_column(ForeignKey("filiais.id"), nullable=False)
+    nome: Mapped[str] = mapped_column(String(45), nullable=False)
+    email: Mapped[str] = mapped_column(String(100), nullable=False)
+    senha_hash: Mapped[str] = mapped_column(String(100), nullable=False)
+    perfil: Mapped[str] = mapped_column(String(12), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, server_default=func.now(), nullable=False)
