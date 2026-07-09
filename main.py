@@ -1,39 +1,33 @@
 from fastapi import FastAPI
 from fastapi import Depends
-from pydantic import BaseModel
-from datetime import datetime
 
 from starlette.status import HTTP_201_CREATED
-from models.empresas import Empresas
 from db.sessions import async_get_session
 from typing import Any
 
+from models.empresas import Empresas
+from schemas.schema_empresas import s_Empresas_out, s_Empresas_create, s_Empresas_response
+from sqlalchemy import select
+
+
 app = FastAPI()
-
-
-class Empresas_update(BaseModel):
-    id: int
-    nome: str
-    centro_de_custo: int
-    created_at: datetime
-    ativo: bool
-
-
 
 @app.get('/')
 def read_root():
     return {"hello": "word"}
 
-@app.get('/empresas')
-def empresas():
+@app.get('/empresas', status_code=200, response_model=s_Empresas_response)
+async def empresas(session = Depends(async_get_session)):
     
+    empresas = await session.scalars(select(Empresas))
+
     return  {
-        'empresas':['a','b','c','d', 'f', 'g']
+        'empresas':empresas.all()
     }
 
-@app.post('/', status_code=201 ,response_model=Empresas_update)
+@app.post('/', status_code=201 ,response_model=s_Empresas_out)
 async def inputar_empresas(
-    dados: Empresas_update,
+    dados: s_Empresas_create,
     session = Depends(async_get_session),
     
 ):
