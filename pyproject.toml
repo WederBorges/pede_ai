@@ -23,3 +23,24 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 package-mode = false
+[dependency-groups]
+dev = [
+    "pytest (>=9.1.1,<10.0.0)",
+    "ruff (>=0.15.21,<0.16.0)"
+]
+
+[tool.ruff]
+line-length = 88
+extend-exclude = ['migrations']
+
+[tool.ruff.lint]
+preview = true
+select = ['I', 'F', 'E', 'W', 'PL', 'PT']
+
+[tool.ruff.format]
+preview = true
+quote-style = 'single'    
+
+[tool.pytest.ini_options]
+pythonpath = "."
+addopts = '-p no:warnings'
