@@ -55,3 +55,4 @@ async def inputar_empresas(
    await session.commit()
    await session.refresh(empresa)
    return empresa
+
