@@ -33,7 +33,7 @@ dev = [
 
 [tool.ruff]
 line-length = 88
-extend-exclude = ['migrations']
+extend-exclude = ['alembic']
 
 [tool.ruff.lint]
 preview = true

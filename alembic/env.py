@@ -9,9 +9,11 @@ from alembic import context
 
 import os
 from dotenv import load_dotenv
+from db.base import Base
+
 load_dotenv()
 
-from db.base import Base
+
 import models
 
 # this is the Alembic Config object, which provides
