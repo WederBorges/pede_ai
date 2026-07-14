@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from datetime import datetime
+from datetime import datetime, timezone
+from schemas.schema_empresas import s_Empresas_out
 
 import pytest
 
@@ -7,14 +8,10 @@ import pytest
 async def test_leitura_empresas(client, empresa_criada):
 
     response = client.get('/empresas')
-    
+    empresa = s_Empresas_out.model_validate(empresa_criada).model_dump(mode="json")
 
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {"empresas":[
-        {'nome':'teste',
-         'centro_de_custo':1,
-         'ativo': True}
-    ]}
+    assert response.json() == {'empresas':[empresa]}
 
 @pytest.mark.asyncio
 async def test_create_empresa(client):
@@ -28,5 +25,5 @@ async def test_create_empresa(client):
  
 
     assert response.status_code == HTTPStatus.CREATED
-    assert datetime_format == datetime.now().date()
+    assert datetime_format == datetime.now(tz=timezone.utc).date()
 

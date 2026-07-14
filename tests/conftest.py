@@ -52,6 +52,7 @@ async def empresa_criada(async_session):
 
 
     async_session.add(empresa)
-    async_session.commit()
-    async_session.refresh(empresa)
+    await async_session.commit()
+    await async_session.refresh(empresa)
+    
     return empresa
