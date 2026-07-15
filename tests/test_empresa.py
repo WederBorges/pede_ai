@@ -21,9 +21,14 @@ async def test_create_empresa(client):
     )
 
     datetime_json = response.json()['created_at']
-    datetime_format = datetime.strptime(datetime_json, "%Y-%m-%dT%H:%M:%S").date()
- 
-
+    print(repr(datetime_json))
+    datetime_format = datetime.fromisoformat(datetime_json).date()
+    
+    
     assert response.status_code == HTTPStatus.CREATED
     assert datetime_format == datetime.now(tz=timezone.utc).date()
+
+@pytest.mark.asyncio
+async def test_delete_empresa(client, empresa_criada, async_session):
+    pass
 

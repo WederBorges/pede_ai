@@ -22,10 +22,10 @@ async def ler_empresas(session=Depends(async_get_session)):
     return {'empresas': empresas.all()}
 
 
-@router.get('/{id_user}', status_code=HTTPStatus.OK, response_model=s_Empresas_out)
-async def ler_empresa_unica(id_user: int, session=Depends(async_get_session)):
+@router.get('/{id_empresa}', status_code=HTTPStatus.OK, response_model=s_Empresas_out)
+async def ler_empresa_unica(id_empresa: int, session=Depends(async_get_session)):
 
-    stmt = select(Empresas).where(Empresas.id == id_user)
+    stmt = select(Empresas).where(Empresas.id == id_empresa)
     empresa = await session.scalar(stmt)
 
     if empresa:
@@ -49,3 +49,24 @@ async def inputar_empresas(
     await session.commit()
     await session.refresh(empresa)
     return empresa
+
+@router.delete('/{id_empresa}', status_code=HTTPStatus.NO_CONTENT)
+async def delete_empresa(id_empresa: int, session = Depends(async_get_session)):
+
+
+    stmt = select(Empresas).where(Empresas.id == id_empresa)
+    empresa = await session.scalar(stmt)
+
+    if not empresa:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail="Empresa inexistente"
+        )
+
+    await session.delete(empresa)
+    await session.commit()
+    
+
+
+
+    
