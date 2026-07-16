@@ -4,9 +4,9 @@ from pydantic import BaseModel, ConfigDict
 
 
 class s_Empresas_create(BaseModel):
-    nome: str
-    centro_de_custo: int
-    ativo: bool
+    nome: str | None = None
+    centro_de_custo: int | None = None
+    ativo: bool | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
