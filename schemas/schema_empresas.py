@@ -22,4 +22,4 @@ class s_Empresas_out(BaseModel):
 
 
 class s_Empresas_response(BaseModel):
-    empresas: list[s_Empresas_out]  
+    empresas: list[s_Empresas_out]
