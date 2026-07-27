@@ -4,14 +4,15 @@ from pydantic import BaseModel, ConfigDict
 
 
 class s_Empresas_create(BaseModel):
-    nome: str | None = None
-    centro_de_custo: int | None = None
-    ativo: bool | None = None
 
-    model_config = ConfigDict(from_attributes=True)
+    nome: str
+    centro_de_custo: int
+    ativo: bool
 
+    
 
 class s_Empresas_out(BaseModel):
+
     id: int
     nome: str
     centro_de_custo: int
@@ -19,6 +20,25 @@ class s_Empresas_out(BaseModel):
     ativo: bool
 
     model_config = ConfigDict(from_attributes=True)
+
+class s_Empresas_update(BaseModel):
+
+    nome: str | None = None
+    centro_de_custo: int | None = None
+    ativo: bool | None = None
+
+class s_Empresas_update_out(BaseModel):
+
+    id: int
+    nome: str
+    centro_de_custo: int
+    created_at: datetime
+    ativo: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+
 
 
 class s_Empresas_response(BaseModel):

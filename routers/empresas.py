@@ -9,6 +9,8 @@ from schemas.schema_empresas import (
     s_Empresas_create,
     s_Empresas_out,
     s_Empresas_response,
+    s_Empresas_update,
+    s_Empresas_update_out,
 )
 from sqlalchemy.exc import IntegrityError
 
@@ -70,20 +72,24 @@ async def delete_empresa(id_empresa: int, session=Depends(async_get_session)):
 
 
 @router.patch('/{id_empresa}', status_code=HTTPStatus.OK, 
-response_model=s_Empresas_create)
-async def update_empresa(id_empresa: int, dados:s_Empresas_create ,session=Depends(async_get_session)):
+response_model=s_Empresas_update_out)
+async def update_empresa(id_empresa: int, dados:s_Empresas_update ,session=Depends(async_get_session)):
     
     stmt = select(Empresas).where(Empresas.id == id_empresa)
     empresa = await session.scalar(stmt)
 
-    dados_exclude_none = dados.model_dump(exclude_unset=True)   
-
-   
-    try:
+    
+    if not empresa:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='Empresa inexistente'
+        )
+    
+    
+    try:        
+        dados_exclude_none = dados.model_dump(exclude_unset=True)  # Exclui dados == None
         
-        for k, v in dados_exclude_none.items():
-            setattr(empresa, k, v)
-            
+        for k, v in dados_exclude_none.items(): #Seta apenas os dados existentes no objeto.
+            setattr(empresa, k, v)        
 
         await session.commit()
         await session.refresh(empresa)
