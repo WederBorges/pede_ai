@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from db.sessions import async_get_session
 from models.empresas import Empresas
@@ -12,7 +13,6 @@ from schemas.schema_empresas import (
     s_Empresas_update,
     s_Empresas_update_out,
 )
-from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(prefix='/empresas')
 
@@ -71,31 +71,36 @@ async def delete_empresa(id_empresa: int, session=Depends(async_get_session)):
     await session.commit()
 
 
-@router.patch('/{id_empresa}', status_code=HTTPStatus.OK, 
-response_model=s_Empresas_update_out)
-async def update_empresa(id_empresa: int, dados:s_Empresas_update ,session=Depends(async_get_session)):
-    
+@router.patch(
+    '/{id_empresa}', status_code=HTTPStatus.OK, response_model=s_Empresas_update_out
+)
+async def update_empresa(
+    id_empresa: int, dados: s_Empresas_update, session=Depends(async_get_session)
+):
+
     stmt = select(Empresas).where(Empresas.id == id_empresa)
     empresa = await session.scalar(stmt)
 
-    
     if not empresa:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='Empresa inexistente'
         )
-    
-    
-    try:        
-        dados_exclude_none = dados.model_dump(exclude_unset=True)  # Exclui dados == None
-        
-        for k, v in dados_exclude_none.items(): #Seta apenas os dados existentes no objeto.
-            setattr(empresa, k, v)        
+
+    try:
+        dados_exclude_none = dados.model_dump(
+            exclude_unset=True
+        )  # Exclui dados == None
+
+        for (
+            k,
+            v,
+        ) in dados_exclude_none.items():  # Seta apenas os dados existentes no objeto.
+            setattr(empresa, k, v)
 
         await session.commit()
         await session.refresh(empresa)
         return empresa
 
     except IntegrityError:
-        raise HTTPException(
-            HTTPStatus.CONFLICT
-        )
+        await session.rollback()
+        raise HTTPException(HTTPStatus.CONFLICT)
