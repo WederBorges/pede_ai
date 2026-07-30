@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from db.sessions import async_get_session
-from models.empresas import Empresas
+from models.empresas_e_filiais import Empresas
 from schemas.schema_empresas import (
     s_Empresas_create,
     s_Empresas_out,
