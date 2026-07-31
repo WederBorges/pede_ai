@@ -30,16 +30,24 @@ async def create_filial(
             detail="Associação a uma empresa inexistente"
         )
 
-    filial = Filiais(
+    try:
+        filial = Filiais(
 
-        nome = dados.nome,
-        empresa_id = dados.empresa_id,
-        cidade = dados.cidade,
-        estado = dados.estado,
-        ativo = dados.ativo
-    )
+            nome = dados.nome,
+            empresa_id = dados.empresa_id,
+            cidade = dados.cidade,
+            estado = dados.estado,
+            ativo = dados.ativo
+        )
+        
+        session.add(filial)
+        await session.commit()
+        await session.refresh(filial)
+        return filial
     
-    session.add(filial)
-    await session.commit()
-    await session.refresh(filial)
-    return filial
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            detail="Entrada de dados inválida"
+        )

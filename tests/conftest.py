@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from db.base import Base
 from db.sessions import async_get_session
 from main import app
-from models.empresas import Empresas
+from models.empresas_e_filiais import Empresas
 
 
 @pytest_asyncio.fixture
