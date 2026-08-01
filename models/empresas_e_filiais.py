@@ -7,6 +7,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -59,4 +60,9 @@ class Filiais(Base):
     ativo: Mapped[bool] = mapped_column(Boolean, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=func.now(), nullable=False
+    )
+
+    __table_args__ = ( # <- tableargs espera uma tupla
+        UniqueConstraint('empresa_id', 'nome', 
+                         name='ck_unique_filial_id_empresa'), # <- A vírgula cria uma tupla
     )

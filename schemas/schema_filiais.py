@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
+from routers import filiais
+
 
 class s_Filiais_create(BaseModel):
 
@@ -15,7 +17,8 @@ class s_Filiais_create(BaseModel):
 
 
 class s_Filiais_out(BaseModel):
-    
+
+    id: int
     nome: str
     empresa_id: int
     cidade: str
@@ -51,4 +54,4 @@ class s_Filiais_update_out(BaseModel):
 
 
 class s_Filiais_response(BaseModel):
-    empresas: list[s_Filiais_out]
+    filiais: list[s_Filiais_out]

@@ -33,3 +33,19 @@ async def test_create_filial(client ,empresa_criada, async_session):
     assert response.status_code == HTTPStatus.CREATED
     assert datetime_format == dt_atual
     assert filial_persistida.nome == dados['nome']
+
+@pytest.mark.asyncio
+async def test_not_found_filial(client, empresa_criada):
+
+    dados = {
+        'nome': "filial2",
+        'empresa_id':empresa_criada.id + 1,
+        'cidade':'jaciara',
+        'estado':'mato grosso',
+        'ativo': False
+    }
+    
+    response = client.post('/filiais', json=dados)
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+

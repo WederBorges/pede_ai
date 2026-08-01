@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class s_Empresas_create(BaseModel):
+
     nome: str
     centro_de_custo: int
     ativo: bool
@@ -12,6 +13,7 @@ class s_Empresas_create(BaseModel):
 
 
 class s_Empresas_out(BaseModel):
+
     id: int
     nome: str
     centro_de_custo: int

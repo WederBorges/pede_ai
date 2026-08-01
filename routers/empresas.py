@@ -17,7 +17,7 @@ from schemas.schema_empresas import (
 router = APIRouter(prefix='/empresas')
 
 
-@router.get('/', status_code=200, response_model=s_Empresas_response)
+@router.get('/', status_code=HTTPStatus.OK, response_model=s_Empresas_response)
 async def ler_empresas(session=Depends(async_get_session)):
 
     empresas = await session.scalars(select(Empresas))
@@ -41,7 +41,7 @@ async def ler_empresa_unica(id_empresa: int, session=Depends(async_get_session))
     )
 
 
-@router.post('/', status_code=201, response_model=s_Empresas_out)
+@router.post('/', status_code=HTTPStatus.CREATED, response_model=s_Empresas_out)
 async def inputar_empresas(
     dados: s_Empresas_create,
     session=Depends(async_get_session),
