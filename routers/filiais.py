@@ -17,6 +17,7 @@ from schemas.schema_filiais import (
     s_Filiais_update,
     s_Filiais_update_out,
 )
+from schemas.schema_utils import Message
 
 router = APIRouter(prefix='/filiais')
 
@@ -86,3 +87,26 @@ async def create_filial(
             HTTPStatus.CONFLICT,
             detail="Entrada de dados inválida"
         )
+
+@router.delete('/{id_filial}', status_code=HTTPStatus.OK, response_model=Message)
+async def delete_filial(id_filial: int, session=Depends(async_get_session)):
+
+    stmt = select(Filiais).where(Filiais.id == id_filial)
+
+    filial = await session.scalar(stmt)
+    if not filial:
+        raise HTTPException(
+            HTTPStatus.NOT_FOUND,
+            detail='Filial inexistente'
+        )
+    
+    try:
+        await session.delete(filial)
+        await session.commit()
+
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            HTTPStatus.CONFLICT
+        )
+    return {'message': "Filial excluída"}

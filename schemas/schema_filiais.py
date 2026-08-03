@@ -2,8 +2,6 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from routers import filiais
-
 
 class s_Filiais_create(BaseModel):
 

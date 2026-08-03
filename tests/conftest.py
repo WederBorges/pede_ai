@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from db.base import Base
 from db.sessions import async_get_session
 from main import app
-from models.empresas_e_filiais import Empresas
+from models.empresas_e_filiais import Empresas, Filiais
 
 
 @pytest_asyncio.fixture
@@ -50,3 +50,20 @@ async def empresa_criada(async_session):
     await async_session.refresh(empresa)
 
     return empresa
+
+@pytest_asyncio.fixture
+async def filial_criada(async_session, empresa_criada):
+
+    filial = Filiais(
+            nome = 'filial',
+            empresa_id = empresa_criada.id,
+            cidade = 'teste',
+            estado = 'teste',
+            ativo = True
+        )
+
+    async_session.add(filial)
+    await async_session.commit()
+    await async_session.refresh(filial)
+
+    return filial
