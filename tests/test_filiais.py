@@ -70,5 +70,17 @@ async def test_delete_filial_not_found(client, async_session, filial_criada):
     
 
     assert response.status_code == HTTPStatus.NOT_FOUND
+
+@pytest.mark.asyncio
+async def test_delete_filial_Integrity_error(client, async_session, filial_criada, empresa_criada):
+
+    dados = {
+        'empresa_id': empresa_criada.id
+    }
+
+    response = client.patch(f'/filiais/{filial_criada.id}', json=dados)
+    
+
+    assert response.status_code == HTTPStatus.CONFLICT
     
 
