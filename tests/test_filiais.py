@@ -61,3 +61,14 @@ async def test_delete_filial(client, async_session, filial_criada):
 
     assert response.status_code == HTTPStatus.OK
     assert filial_existe is None
+
+@pytest.mark.asyncio
+async def test_delete_filial_not_found(client, async_session, filial_criada):
+
+    
+    response = client.delete(f'/filiais/{filial_criada.id + 1}')
+    
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    
+

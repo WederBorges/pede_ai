@@ -110,3 +110,48 @@ async def delete_filial(id_filial: int, session=Depends(async_get_session)):
             HTTPStatus.CONFLICT
         )
     return {'message': "Filial excluída"}
+
+@router.patch('/{id_filial}', status_code=HTTPStatus.OK, response_model=s_Filiais_update_out)
+async def update_filiais(
+    id_filial:int,
+    dados:s_Filiais_update,
+    session=Depends(async_get_session)
+):
+
+    stmt = select(Filiais).where(Filiais.id == id_filial)
+    filial = await session.scalar(stmt)
+    stmt2 = select(Empresas).where(Empresas.id == dados.empresa_id)
+    empresa = await session.scalar(stmt2)
+
+    if not filial:
+        raise HTTPException(
+            HTTPStatus.NOT_FOUND,
+            detail='Filial inexistente'
+        )
+    if not empresa:
+        raise HTTPException(
+            HTTPStatus.NOT_FOUND,
+            detail='Empresa vinculada inexistente'
+        )
+    
+    filial_clear_none = dados.model_dump(exclude_unset=True)
+
+    try:
+
+        for k, v in filial_clear_none.items():
+            setattr(filial, k, v)
+
+        await session.commit()
+        await session.refresh(filial)
+    
+
+    except IntegrityError:
+
+        await session.rollback()
+
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            detail='Não é possível ter 2 filiais com o mesmo nome para a mesma organização'
+        )
+
+    return filial
