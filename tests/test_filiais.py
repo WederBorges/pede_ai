@@ -72,15 +72,39 @@ async def test_delete_filial_not_found(client, async_session, filial_criada):
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 @pytest.mark.asyncio
-async def test_delete_filial_Integrity_error(client, async_session, filial_criada, empresa_criada):
+async def test_create_filial_Integrity_error(client, async_session, empresa_criada, filial_criada):
+
+    await async_session.refresh(empresa_criada)
+    await async_session.refresh(filial_criada)
 
     dados = {
-        'empresa_id': empresa_criada.id
+        'nome': filial_criada.nome,
+        'empresa_id':empresa_criada.id,
+        'cidade':'jaciara',
+        'estado':'mato grosso',
+        'ativo': False
     }
 
-    response = client.patch(f'/filiais/{filial_criada.id}', json=dados)
+    
+    response = client.post(f'/filiais', json=dados)
     
 
     assert response.status_code == HTTPStatus.CONFLICT
     
+@pytest.mark.asyncio
+async def test_update_filial(client, async_session, empresa_criada ,filial_criada):
 
+    await async_session.refresh(empresa_criada)
+    await async_session.refresh(filial_criada)
+
+
+    dados = {'nome': 'atualizando',
+             'empresa_id': empresa_criada.id}
+    
+    response = client.patch(f'/filiais/{filial_criada.id}', json=dados)
+    
+    stmt = select(Filiais).where(Filiais.id == filial_criada.id)
+    filial = await async_session.scalar(stmt)
+
+    assert response.status_code == HTTPStatus.OK
+    assert filial.nome == dados['nome']
