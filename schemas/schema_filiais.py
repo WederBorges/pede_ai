@@ -4,7 +4,6 @@ from pydantic import BaseModel, ConfigDict
 
 
 class s_Filiais_create(BaseModel):
-
     nome: str
     empresa_id: int
     cidade: str
@@ -15,7 +14,6 @@ class s_Filiais_create(BaseModel):
 
 
 class s_Filiais_out(BaseModel):
-
     id: int
     nome: str
     empresa_id: int
@@ -23,12 +21,11 @@ class s_Filiais_out(BaseModel):
     estado: str
     ativo: bool
     created_at: datetime
-   
+
     model_config = ConfigDict(from_attributes=True)
 
 
 class s_Filiais_update(BaseModel):
-    
     nome: str | None = None
     empresa_id: int | None = None
     cidade: str | None = None
@@ -39,15 +36,14 @@ class s_Filiais_update(BaseModel):
 
 
 class s_Filiais_update_out(BaseModel):
-    
     id: int
     nome: str
     empresa_id: int
-    cidade: str 
-    estado: str 
+    cidade: str
+    estado: str
     ativo: bool
     created_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 

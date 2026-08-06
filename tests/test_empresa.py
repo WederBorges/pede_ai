@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from http import HTTPStatus
 
-from fastapi import Query
 import pytest
 from sqlalchemy import select
 
@@ -69,19 +68,15 @@ async def test_update_empresa(client, empresa_criada, async_session):
 
     stmt = select(Empresas).where(Empresas.id == empresa_criada.id)
     emp_bd = await async_session.scalar(stmt)
-    
 
     assert response.status_code == HTTPStatus.OK
     assert emp_bd.nome == dados_update['nome']
     assert emp_bd.centro_de_custo == empresa_criada.centro_de_custo
 
+
 @pytest.mark.asyncio
 async def test_update_id_inexistente(client, empresa_criada, async_session):
 
-
-    response = client.patch(
-        f'/empresas/{33}', json={}
-    )
+    response = client.patch(f'/empresas/{33}', json={})
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    

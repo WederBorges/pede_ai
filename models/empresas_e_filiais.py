@@ -62,7 +62,8 @@ class Filiais(Base):
         TIMESTAMP, server_default=func.now(), nullable=False
     )
 
-    __table_args__ = ( # <- tableargs espera uma tupla
-        UniqueConstraint('empresa_id', 'nome', 
-                         name='ck_unique_filial_id_empresa'), # <- A vírgula cria uma tupla
+    __table_args__ = (  # <- tableargs espera uma tupla
+        UniqueConstraint(
+            'empresa_id', 'nome', name='ck_unique_filial_id_empresa'
+        ),  # <- A vírgula cria uma tupla
     )

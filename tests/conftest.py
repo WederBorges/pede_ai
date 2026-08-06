@@ -51,16 +51,17 @@ async def empresa_criada(async_session):
 
     return empresa
 
+
 @pytest_asyncio.fixture
 async def filial_criada(async_session, empresa_criada):
 
     filial = Filiais(
-            nome = 'filial',
-            empresa_id = empresa_criada.id,
-            cidade = 'teste',
-            estado = 'teste',
-            ativo = True
-        )
+        nome='filial',
+        empresa_id=empresa_criada.id,
+        cidade='teste',
+        estado='teste',
+        ativo=True,
+    )
 
     async_session.add(filial)
     await async_session.commit()
