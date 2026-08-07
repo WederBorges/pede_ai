@@ -20,7 +20,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
     empresa_id: Mapped[int] = mapped_column(ForeignKey('empresas.id'), nullable=False)
-    filial_id: Mapped[int] = mapped_column(ForeignKey('filiais.id'), nullable=False)
+    filial_id: Mapped[int|None] = mapped_column(ForeignKey('filiais.id'), nullable=True)
     nome: Mapped[str] = mapped_column(String(45), nullable=False)
     email: Mapped[str] = mapped_column(String(100), nullable=False)
     senha_hash: Mapped[str] = mapped_column(String(100), nullable=False)

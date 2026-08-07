@@ -128,10 +128,11 @@ async def test_get_not_found_filial_empresa_notexists(client, filial_criada, emp
 @pytest.mark.asyncio
 async def test_update_integrity_error(client, filial_criada, empresa_criada, async_session):
 
+
     await async_session.refresh(empresa_criada)
     await async_session.refresh(filial_criada)
 
-
+    
     dados =  {
         "nome":'filial2',
         "empresa_id":empresa_criada.id,
@@ -140,15 +141,13 @@ async def test_update_integrity_error(client, filial_criada, empresa_criada, asy
         "ativo":True,
     }
 
-
+    dados_filial_teste = {'nome': filial_criada.nome}       
     filial2 = client.post(f'/filiais', json=dados)
+    response = client.patch(f'filiais/{filial2.json()['id']}', json=dados_filial_teste)
 
-    # dados2 = {'nome':dados['nome'], 'empresa_id': empresa_criada}
+    await async_session.refresh(empresa_criada)
+    await async_session.refresh(filial_criada)
+    
 
-    # response = client.patch(f'filiais/{filial_criada.id}')
-    print(filial2.json()['id'])
-
-    # emp2 = async_session.scalar(select(Filiais).weher(Filiais.id = dados.))
-
-    # assert filial2.status_code == HTTPStatus.CREATED 
-    # assert response.status_code == HTTPStatus.CONFLICT
+    assert filial2.status_code == HTTPStatus.CREATED 
+    assert response.status_code == HTTPStatus.CONFLICT
