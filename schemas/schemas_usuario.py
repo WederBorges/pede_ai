@@ -27,7 +27,7 @@ class s_Usuario_out(BaseModel):
     email: str
     perfil: str
     empresa_id: int
-    filial_id: int
+    filial_id: int|None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
