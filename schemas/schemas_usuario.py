@@ -31,3 +31,7 @@ class s_Usuario_out(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class s_Usuarios_Response(BaseModel):
+
+    usuarios: list[s_Usuario_out]

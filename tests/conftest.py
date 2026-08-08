@@ -7,6 +7,7 @@ from db.base import Base
 from db.sessions import async_get_session
 from main import app
 from models.empresas_e_filiais import Empresas, Filiais
+from models.usuarios import User
 
 
 @pytest_asyncio.fixture
@@ -68,3 +69,22 @@ async def filial_criada(async_session, empresa_criada):
     await async_session.refresh(filial)
 
     return filial
+
+
+@pytest_asyncio.fixture
+async def usuario_criado(async_session, empresa_criada):
+
+    user = User(
+        nome='usu1',
+        email='teste@example.com',
+        senha_hash='senha_teste',
+        empresa_id=empresa_criada.id,
+        filial_id=None,
+        perfil='colaborador'
+    )
+
+    async_session.add(user)
+    await async_session.commit()
+    await async_session.refresh(user)
+
+    return user
