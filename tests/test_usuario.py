@@ -36,3 +36,30 @@ async def test_all_users(client, usuario_criado):
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {'usuarios':[validado]}
+
+@pytest.mark.asyncio
+async def test_user(client, usuario_criado, async_session):
+
+    
+    response = client.get(f'/usuarios/{usuario_criado.id}')
+
+    validado =s_Usuario_out.model_validate(usuario_criado).model_dump(mode='json')
+
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == validado
+
+@pytest.mark.asyncio
+async def test_update_user(client, usuario_criado, async_session):
+
+    dados = {'nome': 'wederteste'}
+    
+    response = client.patch(f'/usuarios/{usuario_criado.id}', json=dados)
+
+    userbd = await async_session.scalar(select(User).where(User.id == response.json()['id']))
+    user_bd = s_Usuario_out.model_validate(userbd).model_dump(mode='json')
+
+    print(user_bd)
+
+    assert response.status_code == HTTPStatus.OK
+    assert userbd.nome == dados['nome'] 
