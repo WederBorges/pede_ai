@@ -1,3 +1,7 @@
+import os
+
+os.environ.setdefault('DATABASE_URL', 'sqlite+aiosqlite:///:memory:')
+
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy import StaticPool
@@ -80,7 +84,7 @@ async def usuario_criado(async_session, empresa_criada):
         senha_hash='senha_teste',
         empresa_id=empresa_criada.id,
         filial_id=None,
-        perfil='colaborador'
+        perfil='colaborador',
     )
 
     async_session.add(user)

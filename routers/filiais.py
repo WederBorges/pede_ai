@@ -126,7 +126,8 @@ async def update_filiais(
 
         raise HTTPException(
             HTTPStatus.CONFLICT,
-            detail='Não é possível ter 2 filiais com o mesmo nome para a mesma organização',
+            detail='Não é possível ter 2 filiais com'
+            ' o mesmo nome para a mesma organização',
         )
 
     return filial

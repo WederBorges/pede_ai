@@ -102,7 +102,6 @@ async def test_update_filial(client, async_session, empresa_criada, filial_criad
     stmt = select(Filiais).where(Filiais.id == filial_criada.id)
     filial = await async_session.scalar(stmt)
 
-
     assert response.status_code == HTTPStatus.OK
     assert filial.nome == dados['nome']
 
@@ -110,44 +109,45 @@ async def test_update_filial(client, async_session, empresa_criada, filial_criad
 @pytest.mark.asyncio
 async def test_get_not_found_filial(client, filial_criada):
 
-    response = client.get(f'/filiais/{filial_criada.id+1}')
-    assert response.status_code == HTTPStatus.NOT_FOUND 
+    response = client.get(f'/filiais/{filial_criada.id + 1}')
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
-async def test_get_not_found_filial_empresa_notexists(client, filial_criada, empresa_criada, async_session):
+async def test_get_not_found_filial_empresa_notexists(
+    client, filial_criada, empresa_criada, async_session
+):
 
     await async_session.refresh(empresa_criada)
     await async_session.refresh(filial_criada)
-    
+
     dados = {'empresa_id': 0}
     response = client.patch(f'/filiais/{filial_criada.id}', json=dados)
-    assert response.status_code == HTTPStatus.NOT_FOUND 
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
-async def test_update_integrity_error(client, filial_criada, empresa_criada, async_session):
-
+async def test_update_integrity_error(
+    client, filial_criada, empresa_criada, async_session
+):
 
     await async_session.refresh(empresa_criada)
     await async_session.refresh(filial_criada)
 
-    
-    dados =  {
-        "nome":'filial2',
-        "empresa_id":empresa_criada.id,
-        "cidade":'teste',
-        "estado":'teste',
-        "ativo":True,
+    dados = {
+        'nome': 'filial2',
+        'empresa_id': empresa_criada.id,
+        'cidade': 'teste',
+        'estado': 'teste',
+        'ativo': True,
     }
 
-    dados_filial_teste = {'nome': filial_criada.nome}       
-    filial2 = client.post(f'/filiais', json=dados)
-    response = client.patch(f'filiais/{filial2.json()['id']}', json=dados_filial_teste)
+    dados_filial_teste = {'nome': filial_criada.nome}
+    filial2 = client.post('/filiais', json=dados)
+    response = client.patch(f'filiais/{filial2.json()["id"]}', json=dados_filial_teste)
 
     await async_session.refresh(empresa_criada)
     await async_session.refresh(filial_criada)
-    
 
-    assert filial2.status_code == HTTPStatus.CREATED 
+    assert filial2.status_code == HTTPStatus.CREATED
     assert response.status_code == HTTPStatus.CONFLICT

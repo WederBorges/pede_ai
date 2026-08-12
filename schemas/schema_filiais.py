@@ -36,7 +36,6 @@ class s_Filiais_update(BaseModel):
 
 
 class s_Filiais_update_out(BaseModel):
-
     id: int
     nome: str
     empresa_id: int
