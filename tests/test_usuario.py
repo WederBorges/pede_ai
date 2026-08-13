@@ -4,7 +4,6 @@ import pytest
 from sqlalchemy import select
 
 from models.usuarios import User
-from models.empresas_e_filiais import Empresas, Filiais
 from schemas.schemas_usuario import s_Usuario_out
 
 
@@ -75,9 +74,9 @@ async def test_delete_user(client, usuario_criado, async_session):
         select(User).where(User.id == usuario_criado.id)
     )
 
-
     assert response.status_code == HTTPStatus.OK
     assert userbd is None
+
 
 @pytest.mark.asyncio
 async def test_usuario_inexistente(client, async_session, usuario_criado):
@@ -87,22 +86,26 @@ async def test_usuario_inexistente(client, async_session, usuario_criado):
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {'detail': 'Usuário inexistente'}
 
+
 @pytest.mark.asyncio
 async def test_filial_vinculada_usuario_inexistente(
-    client, async_session, empresa_criada, filial_criada):
+    client, async_session, empresa_criada, filial_criada
+):
 
     await async_session.refresh(empresa_criada)
     await async_session.refresh(filial_criada)
 
-    response = client.post('/usuarios', json={
-        'nome': 'teste',
-        'email': 'teste@example.com',
-        'senha': 'teste123',
-        'empresa_id': empresa_criada.id,
-        'filial_id': filial_criada.id + 1,
-        'perfil': 'TESTE'
-    })
+    response = client.post(
+        '/usuarios',
+        json={
+            'nome': 'teste',
+            'email': 'teste@example.com',
+            'senha': 'teste123',
+            'empresa_id': empresa_criada.id,
+            'filial_id': filial_criada.id + 1,
+            'perfil': 'TESTE',
+        },
+    )
 
-    print(response.json())
-    # assert response.status_code == HTTPStatus.NOT_FOUND
-    # assert response.json() == {'detail': 'Filial não encontrada'}
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Filial não encontrada'}

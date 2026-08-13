@@ -4,7 +4,7 @@ os.environ.setdefault('DATABASE_URL', 'sqlite+aiosqlite:///:memory:')
 
 import pytest_asyncio
 from fastapi.testclient import TestClient
-from sqlalchemy import StaticPool
+from sqlalchemy import StaticPool, event
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from db.base import Base
@@ -34,6 +34,12 @@ async def async_session():
         connect_args={'check_same_thread': False},
         poolclass=StaticPool,
     )
+
+    @event.listens_for(engine.sync_engine, 'connect')
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute('PRAGMA foreign_keys=ON')
+        cursor.close()
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

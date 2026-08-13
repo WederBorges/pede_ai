@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from db.sessions import async_get_session
 from models.empresas_e_filiais import Empresas, Filiais
 from models.usuarios import User
+from schemas.schema_utils import Message
 from schemas.schemas_usuario import (
     s_Usuario_created,
     s_Usuario_out,
@@ -14,7 +15,7 @@ from schemas.schemas_usuario import (
     s_Usuario_Update_out,
     s_Usuarios_Response,
 )
-from schemas.schema_utils import Message
+
 router = APIRouter(prefix='/usuarios')
 
 
@@ -30,16 +31,17 @@ async def create_user(dados: s_Usuario_created, session=Depends(async_get_sessio
         filial_id=dados.filial_id,
     )
 
-    stmt1 = session.scalar(select(Empresas).where(Empresas.id == dados.empresa_id))
+    stmt1 = await session.scalar(
+        select(Empresas).where(Empresas.id == dados.empresa_id)
+    )
     if not stmt1:
-        raise HTTPException(
-            HTTPStatus.NOT_FOUND, detail='Empresa não encontrada'
+        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Empresa não encontrada')
+    if dados.filial_id is not None:
+        stmt2 = await session.scalar(
+            select(Filiais).where(Filiais.id == dados.filial_id)
         )
-    stmt2 = session.scalar(select(Filiais).where(Filiais.id == dados.filial_id))
-    if not stmt2:
-        raise HTTPException(
-            HTTPStatus.NOT_FOUND, detail='Filial não encontrada'
-        )
+        if not stmt2:
+            raise HTTPException(HTTPStatus.NOT_FOUND, detail='Filial não encontrada')
 
     try:
         session.add(model)
@@ -110,6 +112,7 @@ async def update_user(
         await session.rollback()
         raise HTTPException(HTTPStatus.CONFLICT)
 
+
 @router.delete('/{id_user}', status_code=HTTPStatus.OK, response_model=Message)
 async def delete_user(id_user: int, session=Depends(async_get_session)):
 
@@ -117,9 +120,7 @@ async def delete_user(id_user: int, session=Depends(async_get_session)):
     user = await session.scalar(stmt)
 
     if not user:
-        raise HTTPException(
-            HTTPStatus.NOT_FOUND, 
-            detail='Usuário inexistente')
+        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Usuário inexistente')
 
     try:
         await session.delete(user)
@@ -129,4 +130,3 @@ async def delete_user(id_user: int, session=Depends(async_get_session)):
     except IntegrityError:
         await session.rollback()
         raise HTTPException(HTTPStatus.CONFLICT)
-
