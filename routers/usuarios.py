@@ -96,6 +96,21 @@ async def update_user(
     stmt = select(User).where(User.id == id_user)
     user = await session.scalar(stmt)
 
+
+    stmt1 = await session.scalar(
+        select(Empresas).where(Empresas.id == dados.empresa_id)
+    )
+    if not stmt1:
+        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Empresa não encontrada')
+
+    if dados.filial_id is not None:
+        stmt2 = await session.scalar(
+            select(Filiais).where(Filiais.id == dados.filial_id)
+        )
+        if not stmt2:
+            raise HTTPException(HTTPStatus.NOT_FOUND, detail='Filial não encontrada')
+
+    
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, detail='Usuário inexistente')
 

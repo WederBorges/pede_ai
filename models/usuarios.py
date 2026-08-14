@@ -9,7 +9,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import TIMESTAMP, ForeignKey, String, func
+from sqlalchemy import TIMESTAMP, ForeignKey, String, func, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.base import Base
@@ -30,3 +30,5 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=func.now(), nullable=False
     )
+
+    __table_args__ = (UniqueConstraint('email', name='uq_email'),)

@@ -66,6 +66,7 @@ async def empresa_criada(async_session):
 @pytest_asyncio.fixture
 async def filial_criada(async_session, empresa_criada):
 
+    await async_session.refresh(empresa_criada)
     filial = Filiais(
         nome='filial',
         empresa_id=empresa_criada.id,
@@ -84,6 +85,7 @@ async def filial_criada(async_session, empresa_criada):
 @pytest_asyncio.fixture
 async def usuario_criado(async_session, empresa_criada):
 
+    await async_session.refresh(empresa_criada)
     user = User(
         nome='usu1',
         email='teste@example.com',

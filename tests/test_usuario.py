@@ -52,7 +52,7 @@ async def test_user(client, usuario_criado, async_session):
 @pytest.mark.asyncio
 async def test_update_user(client, usuario_criado, async_session):
 
-    dados = {'nome': 'wederteste'}
+    dados = {'nome': 'wederteste', 'empresa_id': usuario_criado.empresa_id}
 
     response = client.patch(f'/usuarios/{usuario_criado.id}', json=dados)
 
@@ -63,6 +63,24 @@ async def test_update_user(client, usuario_criado, async_session):
 
     assert response.status_code == HTTPStatus.OK
     assert userbd.nome == dados['nome']
+
+
+@pytest.mark.asyncio
+async def test_update_user_filial_inexistente(client, usuario_criado, async_session, filial_criada, empresa_criada):
+    await async_session.refresh(empresa_criada)
+    await async_session.refresh(filial_criada)
+    await async_session.refresh(usuario_criado)
+
+    filial_id = filial_criada.id + 1
+    usuario_id = usuario_criado.id
+
+    dados = {'nome': 'wederteste', 'filial_id': filial_id}
+    
+    response = client.patch(f'/usuarios/{usuario_id}', json=dados)
+    
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    print(response.json())
+    # assert response.json() == {'detail': 'Filial não encontrada'}
 
 
 @pytest.mark.asyncio
