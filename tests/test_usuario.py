@@ -50,12 +50,31 @@ async def test_user(client, usuario_criado, async_session):
 
 
 @pytest.mark.asyncio
-async def test_update_user(client, usuario_criado, async_session):
+async def test_update_user_empresa(client, usuario_criado, async_session):
 
     dados = {'nome': 'wederteste', 'empresa_id': usuario_criado.empresa_id}
 
     response = client.patch(f'/usuarios/{usuario_criado.id}', json=dados)
+    userbd = await async_session.scalar(
+        select(User).where(User.id == response.json()['id'])
+    )
+    user_bd = s_Usuario_out.model_validate(userbd).model_dump(mode='json')
 
+    assert response.status_code == HTTPStatus.OK
+    assert userbd.nome == dados['nome']
+
+@pytest.mark.asyncio
+async def test_update_user_filial(client, usuario_criado, async_session, filial_criada, empresa_criada):
+
+    await async_session.refresh(usuario_criado)
+    await async_session.refresh(filial_criada)
+    await async_session.refresh(empresa_criada)
+
+    dados = {'nome': 'wederteste', 'filial_id':filial_criada.id}
+
+    response = client.patch(f'/usuarios/{usuario_criado.id}', json=dados)
+
+    print(response.json(), 'i')
     userbd = await async_session.scalar(
         select(User).where(User.id == response.json()['id'])
     )
@@ -71,16 +90,14 @@ async def test_update_user_filial_inexistente(client, usuario_criado, async_sess
     await async_session.refresh(filial_criada)
     await async_session.refresh(usuario_criado)
 
-    filial_id = filial_criada.id + 1
+    filial_id = filial_criada.id
     usuario_id = usuario_criado.id
 
-    dados = {'nome': 'wederteste', 'filial_id': filial_id}
+    dados = {'nome': 'wederteste', 'filial_id': filial_id + 999}
     
     response = client.patch(f'/usuarios/{usuario_id}', json=dados)
-    
     assert response.status_code == HTTPStatus.NOT_FOUND
-    print(response.json())
-    # assert response.json() == {'detail': 'Filial não encontrada'}
+    assert response.json() == {'detail': 'Empresa ou filial inexistente'}
 
 
 @pytest.mark.asyncio

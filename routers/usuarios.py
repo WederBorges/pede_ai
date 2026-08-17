@@ -16,6 +16,8 @@ from schemas.schemas_usuario import (
     s_Usuarios_Response,
 )
 
+from services.services_usuarios import validar_filial_e_empresas
+
 router = APIRouter(prefix='/usuarios')
 
 
@@ -95,33 +97,21 @@ async def update_user(
 
     stmt = select(User).where(User.id == id_user)
     user = await session.scalar(stmt)
-
-
-    stmt1 = await session.scalar(
-        select(Empresas).where(Empresas.id == dados.empresa_id)
-    )
-    if not stmt1:
-        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Empresa não encontrada')
-
-    if dados.filial_id is not None:
-        stmt2 = await session.scalar(
-            select(Filiais).where(Filiais.id == dados.filial_id)
-        )
-        if not stmt2:
-            raise HTTPException(HTTPStatus.NOT_FOUND, detail='Filial não encontrada')
-
-    
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, detail='Usuário inexistente')
+    if dados.filial_id is not None:
+        await validar_filial_e_empresas(session, dados, empresa_id_atual=user.empresa_id)
 
     try:
         model = dados.model_dump(exclude_unset=True)
 
+     
         for k, v in model.items():
             setattr(user, k, v)
-        await session.commit()
-        await session.refresh(user)
+            await session.commit()
+            await session.refresh(user)
         return user
+    
 
     except IntegrityError:
         await session.rollback()
