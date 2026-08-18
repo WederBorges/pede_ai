@@ -9,7 +9,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import TIMESTAMP, ForeignKey, String, func, UniqueConstraint
+from sqlalchemy import TIMESTAMP, ForeignKey, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.base import Base

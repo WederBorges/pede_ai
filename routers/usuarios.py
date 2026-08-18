@@ -5,7 +5,6 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from db.sessions import async_get_session
-from models.empresas_e_filiais import Empresas, Filiais
 from models.usuarios import User
 from schemas.schema_utils import Message
 from schemas.schemas_usuario import (
@@ -15,7 +14,6 @@ from schemas.schemas_usuario import (
     s_Usuario_Update_out,
     s_Usuarios_Response,
 )
-
 from services.services_usuarios import validar_filial_e_empresas
 
 router = APIRouter(prefix='/usuarios')
@@ -23,6 +21,12 @@ router = APIRouter(prefix='/usuarios')
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=s_Usuario_out)
 async def create_user(dados: s_Usuario_created, session=Depends(async_get_session)):
+
+    stmt = select(User).where(User.email == dados.email)
+    email_existente = await session.scalar(stmt)
+
+    if email_existente:
+        raise HTTPException(HTTPStatus.CONFLICT, detail='Email já cadastrado')
 
     model = User(
         nome=dados.nome,
@@ -33,17 +37,12 @@ async def create_user(dados: s_Usuario_created, session=Depends(async_get_sessio
         filial_id=dados.filial_id,
     )
 
-    stmt1 = await session.scalar(
-        select(Empresas).where(Empresas.id == dados.empresa_id)
+    await validar_filial_e_empresas(
+        session=session,
+        dados=dados,
+        empresa_id_atual=dados.empresa_id,
+        filial_id_atual=dados.filial_id,
     )
-    if not stmt1:
-        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Empresa não encontrada')
-    if dados.filial_id is not None:
-        stmt2 = await session.scalar(
-            select(Filiais).where(Filiais.id == dados.filial_id)
-        )
-        if not stmt2:
-            raise HTTPException(HTTPStatus.NOT_FOUND, detail='Filial não encontrada')
 
     try:
         session.add(model)
@@ -58,11 +57,11 @@ async def create_user(dados: s_Usuario_created, session=Depends(async_get_sessio
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=s_Usuarios_Response)
 async def read_all_users(
-    id_empresa: int | None = None, session=Depends(async_get_session)
+    empresa_id: int | None = None, session=Depends(async_get_session)
 ):
 
-    if id_empresa:
-        stmt = select(User).where(User.empresa_id == id_empresa)
+    if empresa_id:
+        stmt = select(User).where(User.empresa_id == empresa_id)
         all_users = await session.scalars(stmt)
 
         if not all_users.all():
@@ -97,21 +96,27 @@ async def update_user(
 
     stmt = select(User).where(User.id == id_user)
     user = await session.scalar(stmt)
+
     if not user:
         raise HTTPException(HTTPStatus.NOT_FOUND, detail='Usuário inexistente')
-    if dados.filial_id is not None:
-        await validar_filial_e_empresas(session, dados, empresa_id_atual=user.empresa_id)
+
+    if dados.email is not None and dados.email != user.email:
+        stmt = select(User).where(User.email == dados.email)
+        email_existente = await session.scalar(stmt)
+
+        if email_existente:
+            raise HTTPException(HTTPStatus.CONFLICT, detail='Email já cadastrado')
+
+    await validar_filial_e_empresas(session, dados, empresa_id_atual=user.empresa_id)
 
     try:
         model = dados.model_dump(exclude_unset=True)
 
-     
         for k, v in model.items():
             setattr(user, k, v)
-            await session.commit()
-            await session.refresh(user)
+        await session.commit()
+        await session.refresh(user)
         return user
-    
 
     except IntegrityError:
         await session.rollback()

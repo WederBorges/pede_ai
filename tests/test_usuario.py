@@ -58,34 +58,36 @@ async def test_update_user_empresa(client, usuario_criado, async_session):
     userbd = await async_session.scalar(
         select(User).where(User.id == response.json()['id'])
     )
-    user_bd = s_Usuario_out.model_validate(userbd).model_dump(mode='json')
 
     assert response.status_code == HTTPStatus.OK
     assert userbd.nome == dados['nome']
 
+
 @pytest.mark.asyncio
-async def test_update_user_filial(client, usuario_criado, async_session, filial_criada, empresa_criada):
+async def test_update_user_filial(
+    client, usuario_criado, async_session, filial_criada, empresa_criada
+):
 
     await async_session.refresh(usuario_criado)
     await async_session.refresh(filial_criada)
     await async_session.refresh(empresa_criada)
 
-    dados = {'nome': 'wederteste', 'filial_id':filial_criada.id}
+    dados = {'nome': 'wederteste', 'filial_id': filial_criada.id}
 
     response = client.patch(f'/usuarios/{usuario_criado.id}', json=dados)
 
-    print(response.json(), 'i')
     userbd = await async_session.scalar(
         select(User).where(User.id == response.json()['id'])
     )
-    user_bd = s_Usuario_out.model_validate(userbd).model_dump(mode='json')
 
     assert response.status_code == HTTPStatus.OK
     assert userbd.nome == dados['nome']
 
 
 @pytest.mark.asyncio
-async def test_update_user_filial_inexistente(client, usuario_criado, async_session, filial_criada, empresa_criada):
+async def test_update_user_filial_inexistente(
+    client, usuario_criado, async_session, filial_criada, empresa_criada
+):
     await async_session.refresh(empresa_criada)
     await async_session.refresh(filial_criada)
     await async_session.refresh(usuario_criado)
@@ -94,10 +96,10 @@ async def test_update_user_filial_inexistente(client, usuario_criado, async_sess
     usuario_id = usuario_criado.id
 
     dados = {'nome': 'wederteste', 'filial_id': filial_id + 999}
-    
+
     response = client.patch(f'/usuarios/{usuario_id}', json=dados)
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {'detail': 'Empresa ou filial inexistente'}
+    assert response.json() == {'detail': 'Filial inexistente'}
 
 
 @pytest.mark.asyncio
@@ -143,4 +145,80 @@ async def test_filial_vinculada_usuario_inexistente(
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {'detail': 'Filial não encontrada'}
+    assert response.json() == {'detail': 'Filial inexistente'}
+
+
+@pytest.mark.asyncio
+async def test_usuario_empresa_inexistente(
+    client, async_session, empresa_criada, usuario_criado, filial_criada
+):
+
+    await async_session.refresh(empresa_criada)
+    await async_session.refresh(usuario_criado)
+
+    response = client.get('/usuarios', params={'empresa_id': empresa_criada.id + 1})
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Não existem usuários para esta empresa'}
+
+
+@pytest.mark.asyncio
+async def test_usuario_nao_vinculado_a_empresa(
+    client, async_session, empresa_criada, usuario_criado, filial_criada
+):
+
+    await async_session.refresh(empresa_criada)
+    await async_session.refresh(usuario_criado)
+
+    response = client.get('/usuarios', params={'empresa_id': empresa_criada.id + 1})
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Não existem usuários para esta empresa'}
+
+
+@pytest.mark.asyncio
+async def test_usuario_email_duplicado(client, usuario_criado, async_session):
+
+    response = client.post(
+        '/usuarios',
+        json={
+            'nome': 'teste',
+            'email': usuario_criado.email,
+            'senha': 'teste123',
+            'empresa_id': usuario_criado.empresa_id,
+            'filial_id': usuario_criado.filial_id,
+            'perfil': 'TESTE',
+        },
+    )
+
+    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.json() == {'detail': 'Email já cadastrado'}
+
+
+@pytest.mark.asyncio
+async def test_update_usuario_email_duplicado(
+    client, usuario_criado, async_session, empresa_criada, filial_criada
+):
+
+    await async_session.refresh(usuario_criado)
+
+    user = client.post(
+        '/usuarios',
+        json={
+            'nome': 'teste',
+            'email': 'teste_user@example.com',
+            'senha': 'teste123',
+            'empresa_id': usuario_criado.empresa_id,
+            'filial_id': usuario_criado.filial_id,
+            'perfil': 'TESTE',
+        },
+    )
+
+    await async_session.refresh(usuario_criado)
+
+    dados = {'email': usuario_criado.email}
+
+    response = client.patch(f'/usuarios/{user.json()["id"]}', json=dados)
+
+    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.json() == {'detail': 'Email já cadastrado'}
