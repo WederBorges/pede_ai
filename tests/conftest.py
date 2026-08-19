@@ -11,6 +11,7 @@ from db.base import Base
 from db.sessions import async_get_session
 from main import app
 from models.empresas_e_filiais import Empresas, Filiais
+from models.categorias import Categoria
 from models.usuarios import User
 
 
@@ -100,3 +101,19 @@ async def usuario_criado(async_session, empresa_criada):
     await async_session.refresh(user)
 
     return user
+
+@pytest_asyncio.fixture
+async def criado_categoria(async_session):
+
+    
+    categoria = Categoria(
+        nome='categoria_teste',
+        descricao='teste',
+        ativo=True,
+    )
+
+    async_session.add(categoria)
+    await async_session.commit()
+    await async_session.refresh(categoria)
+
+    return categoria

@@ -91,10 +91,7 @@ async def update_empresa(
             exclude_unset=True
         )  # Exclui dados == None
 
-        for (
-            k,
-            v,
-        ) in dados_exclude_none.items():  # Seta apenas os dados existentes no objeto.
+        for k,v in dados_exclude_none.items():  # Seta apenas os dados existentes no objeto.
             setattr(empresa, k, v)
 
         await session.commit()

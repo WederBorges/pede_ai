@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
+from datetime import datetime
 
 class s_Categorias_create(BaseModel):
     nome: str
@@ -14,7 +15,7 @@ class s_Categorias_out(BaseModel):
     nome: str
     descricao: str | None = None
     ativo: bool
-    created_at: str
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -36,8 +37,8 @@ class s_Categorias_update(BaseModel):
 class s_Categorias_update_out(BaseModel):
     id: int
     nome: str
-    descricao: str
+    descricao: str | None = None
     ativo: bool
-    created_at: str
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
