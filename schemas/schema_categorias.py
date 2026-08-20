@@ -1,5 +1,4 @@
 from pydantic import BaseModel, ConfigDict
-
 from datetime import datetime
 
 class s_Categorias_create(BaseModel):
