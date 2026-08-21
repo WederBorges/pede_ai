@@ -107,9 +107,7 @@ async def test_delete_user(client, usuario_teste, async_session):
 
     response = client.delete(f'/usuarios/{usuario_teste.id}')
 
-    userbd = await async_session.scalar(
-        select(User).where(User.id == usuario_teste.id)
-    )
+    userbd = await async_session.scalar(select(User).where(User.id == usuario_teste.id))
 
     assert response.status_code == HTTPStatus.OK
     assert userbd is None

@@ -13,10 +13,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from db.base import Base
 from db.sessions import async_get_session
 from main import app
-from models.empresas_e_filiais import Empresas, Filiais
 from models.categorias import Categoria
-from models.usuarios import User
+from models.empresas_e_filiais import Empresas, Filiais
 from models.produtos import Produtos
+from models.usuarios import User
 
 
 @pytest_asyncio.fixture
@@ -26,9 +26,7 @@ async def client(async_session):
         return async_session
 
     with TestClient(app) as client:
-        app.dependency_overrides[async_get_session] = (
-            get_async_session_override
-        )
+        app.dependency_overrides[async_get_session] = get_async_session_override
 
         yield client
 
@@ -56,17 +54,13 @@ async def async_session():
         cursor.close()
 
     async with engine.begin() as conn:
-        await conn.run_sync(
-            Base.metadata.create_all
-        )
+        await conn.run_sync(Base.metadata.create_all)
 
     async with AsyncSession(engine) as session:
         yield session
 
     async with engine.begin() as conn:
-        await conn.run_sync(
-            Base.metadata.drop_all
-        )
+        await conn.run_sync(Base.metadata.drop_all)
 
 
 @pytest_asyncio.fixture
@@ -91,9 +85,7 @@ async def filial_teste(
     empresa_teste,
 ):
 
-    await async_session.refresh(
-        empresa_teste
-    )
+    await async_session.refresh(empresa_teste)
 
     filial = Filiais(
         nome='filial_teste',
@@ -116,9 +108,7 @@ async def usuario_teste(
     empresa_teste,
 ):
 
-    await async_session.refresh(
-        empresa_teste
-    )
+    await async_session.refresh(empresa_teste)
 
     user = User(
         nome='usuario_teste',
