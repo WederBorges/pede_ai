@@ -1,6 +1,9 @@
 import os
 
-os.environ.setdefault('DATABASE_URL', 'sqlite+aiosqlite:///:memory:')
+os.environ.setdefault(
+    'DATABASE_URL',
+    'sqlite+aiosqlite:///:memory:',
+)
 
 import pytest_asyncio
 from fastapi.testclient import TestClient
@@ -13,6 +16,7 @@ from main import app
 from models.empresas_e_filiais import Empresas, Filiais
 from models.categorias import Categoria
 from models.usuarios import User
+from models.produtos import Produtos
 
 
 @pytest_asyncio.fixture
@@ -22,8 +26,12 @@ async def client(async_session):
         return async_session
 
     with TestClient(app) as client:
-        app.dependency_overrides[async_get_session] = get_async_session_override
+        app.dependency_overrides[async_get_session] = (
+            get_async_session_override
+        )
+
         yield client
+
     app.dependency_overrides.clear()
 
 
@@ -32,30 +40,43 @@ async def async_session():
 
     engine = create_async_engine(
         'sqlite+aiosqlite:///:memory:',
-        connect_args={'check_same_thread': False},
+        connect_args={
+            'check_same_thread': False,
+        },
         poolclass=StaticPool,
     )
 
     @event.listens_for(engine.sync_engine, 'connect')
-    def set_sqlite_pragma(dbapi_connection, connection_record):
+    def set_sqlite_pragma(
+        dbapi_connection,
+        connection_record,
+    ):
         cursor = dbapi_connection.cursor()
         cursor.execute('PRAGMA foreign_keys=ON')
         cursor.close()
 
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(
+            Base.metadata.create_all
+        )
 
     async with AsyncSession(engine) as session:
         yield session
 
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(
+            Base.metadata.drop_all
+        )
 
 
 @pytest_asyncio.fixture
-async def empresa_criada(async_session):
+async def empresa_teste(async_session):
 
-    empresa = Empresas(nome='teste', centro_de_custo=1, ativo=True)
+    empresa = Empresas(
+        nome='empresa_teste',
+        centro_de_custo=1,
+        ativo=True,
+    )
 
     async_session.add(empresa)
     await async_session.commit()
@@ -65,12 +86,18 @@ async def empresa_criada(async_session):
 
 
 @pytest_asyncio.fixture
-async def filial_criada(async_session, empresa_criada):
+async def filial_teste(
+    async_session,
+    empresa_teste,
+):
 
-    await async_session.refresh(empresa_criada)
+    await async_session.refresh(
+        empresa_teste
+    )
+
     filial = Filiais(
-        nome='filial',
-        empresa_id=empresa_criada.id,
+        nome='filial_teste',
+        empresa_id=empresa_teste.id,
         cidade='teste',
         estado='teste',
         ativo=True,
@@ -84,14 +111,20 @@ async def filial_criada(async_session, empresa_criada):
 
 
 @pytest_asyncio.fixture
-async def usuario_criado(async_session, empresa_criada):
+async def usuario_teste(
+    async_session,
+    empresa_teste,
+):
 
-    await async_session.refresh(empresa_criada)
+    await async_session.refresh(
+        empresa_teste
+    )
+
     user = User(
-        nome='usu1',
+        nome='usuario_teste',
         email='teste@example.com',
         senha_hash='senha_teste',
-        empresa_id=empresa_criada.id,
+        empresa_id=empresa_teste.id,
         filial_id=None,
         perfil='colaborador',
     )
@@ -102,10 +135,10 @@ async def usuario_criado(async_session, empresa_criada):
 
     return user
 
-@pytest_asyncio.fixture
-async def criado_categoria(async_session):
 
-    
+@pytest_asyncio.fixture
+async def categoria_teste(async_session):
+
     categoria = Categoria(
         nome='categoria_teste',
         descricao='teste',
@@ -117,3 +150,25 @@ async def criado_categoria(async_session):
     await async_session.refresh(categoria)
 
     return categoria
+
+
+@pytest_asyncio.fixture
+async def produto_teste(
+    async_session,
+    categoria_teste,
+):
+
+    produto = Produtos(
+        categoria_id=categoria_teste.id,
+        nome='produto_teste',
+        descricao='teste',
+        preco=10.0,
+        imagem_url='https://example.com/imagem.jpg',
+        ativo=True,
+    )
+
+    async_session.add(produto)
+    await async_session.commit()
+    await async_session.refresh(produto)
+
+    return produto

@@ -8,10 +8,10 @@ from models import Filiais
 
 
 @pytest.mark.asyncio
-async def test_create_filial(client, empresa_criada, async_session):
+async def test_create_filial(client, empresa_teste, async_session):
     dados = {
         'nome': 'filial1',
-        'empresa_id': empresa_criada.id,
+        'empresa_id': empresa_teste.id,
         'cidade': 'cuiaba',
         'estado': 'mato grosso',
         'ativo': True,
@@ -33,11 +33,11 @@ async def test_create_filial(client, empresa_criada, async_session):
 
 
 @pytest.mark.asyncio
-async def test_not_found_filial(client, empresa_criada):
+async def test_not_found_filial(client, empresa_teste):
 
     dados = {
         'nome': 'filial2',
-        'empresa_id': empresa_criada.id + 1,
+        'empresa_id': empresa_teste.id + 1,
         'cidade': 'jaciara',
         'estado': 'mato grosso',
         'ativo': False,
@@ -49,11 +49,11 @@ async def test_not_found_filial(client, empresa_criada):
 
 
 @pytest.mark.asyncio
-async def test_delete_filial(client, async_session, filial_criada):
+async def test_delete_filial(client, async_session, filial_teste):
 
-    response = client.delete(f'/filiais/{filial_criada.id}')
+    response = client.delete(f'/filiais/{filial_teste.id}')
 
-    stmt = select(Filiais).where(Filiais.id == filial_criada.id)
+    stmt = select(Filiais).where(Filiais.id == filial_teste.id)
     filial_existe = await async_session.scalar(stmt)
 
     assert response.status_code == HTTPStatus.OK
@@ -61,24 +61,24 @@ async def test_delete_filial(client, async_session, filial_criada):
 
 
 @pytest.mark.asyncio
-async def test_delete_filial_not_found(client, async_session, filial_criada):
+async def test_delete_filial_not_found(client, async_session, filial_teste):
 
-    response = client.delete(f'/filiais/{filial_criada.id + 1}')
+    response = client.delete(f'/filiais/{filial_teste.id + 1}')
 
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
 async def test_create_filial_Integrity_error(
-    client, async_session, empresa_criada, filial_criada
+    client, async_session, empresa_teste, filial_teste
 ):
 
-    await async_session.refresh(empresa_criada)
-    await async_session.refresh(filial_criada)
+    await async_session.refresh(empresa_teste)
+    await async_session.refresh(filial_teste)
 
     dados = {
-        'nome': filial_criada.nome,
-        'empresa_id': empresa_criada.id,
+        'nome': filial_teste.nome,
+        'empresa_id': empresa_teste.id,
         'cidade': 'jaciara',
         'estado': 'mato grosso',
         'ativo': False,
@@ -90,16 +90,16 @@ async def test_create_filial_Integrity_error(
 
 
 @pytest.mark.asyncio
-async def test_update_filial(client, async_session, empresa_criada, filial_criada):
+async def test_update_filial(client, async_session, empresa_teste, filial_teste):
 
-    await async_session.refresh(empresa_criada)
-    await async_session.refresh(filial_criada)
+    await async_session.refresh(empresa_teste)
+    await async_session.refresh(filial_teste)
 
     dados = {'nome': 'atualizando'}
 
-    response = client.patch(f'/filiais/{filial_criada.id}', json=dados)
+    response = client.patch(f'/filiais/{filial_teste.id}', json=dados)
 
-    stmt = select(Filiais).where(Filiais.id == filial_criada.id)
+    stmt = select(Filiais).where(Filiais.id == filial_teste.id)
     filial = await async_session.scalar(stmt)
 
     assert response.status_code == HTTPStatus.OK
@@ -107,47 +107,47 @@ async def test_update_filial(client, async_session, empresa_criada, filial_criad
 
 
 @pytest.mark.asyncio
-async def test_get_not_found_filial(client, filial_criada):
+async def test_get_not_found_filial(client, filial_teste):
 
-    response = client.get(f'/filiais/{filial_criada.id + 1}')
+    response = client.get(f'/filiais/{filial_teste.id + 1}')
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
 async def test_get_not_found_filial_empresa_notexists(
-    client, filial_criada, empresa_criada, async_session
+    client, filial_teste, empresa_teste, async_session
 ):
 
-    await async_session.refresh(empresa_criada)
-    await async_session.refresh(filial_criada)
+    await async_session.refresh(empresa_teste)
+    await async_session.refresh(filial_teste)
 
     dados = {'empresa_id': 0}
-    response = client.patch(f'/filiais/{filial_criada.id}', json=dados)
+    response = client.patch(f'/filiais/{filial_teste.id}', json=dados)
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
 async def test_update_integrity_error(
-    client, filial_criada, empresa_criada, async_session
+    client, filial_teste, empresa_teste, async_session
 ):
 
-    await async_session.refresh(empresa_criada)
-    await async_session.refresh(filial_criada)
+    await async_session.refresh(empresa_teste)
+    await async_session.refresh(filial_teste)
 
     dados = {
         'nome': 'filial2',
-        'empresa_id': empresa_criada.id,
+        'empresa_id': empresa_teste.id,
         'cidade': 'teste',
         'estado': 'teste',
         'ativo': True,
     }
 
-    dados_filial_teste = {'nome': filial_criada.nome}
+    dados_filial_teste = {'nome': filial_teste.nome}
     filial2 = client.post('/filiais', json=dados)
     response = client.patch(f'filiais/{filial2.json()["id"]}', json=dados_filial_teste)
 
-    await async_session.refresh(empresa_criada)
-    await async_session.refresh(filial_criada)
+    await async_session.refresh(empresa_teste)
+    await async_session.refresh(filial_teste)
 
     assert filial2.status_code == HTTPStatus.CREATED
     assert response.status_code == HTTPStatus.CONFLICT

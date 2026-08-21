@@ -9,21 +9,21 @@ from schemas.schema_empresas import s_Empresas_create, s_Empresas_out
 
 
 @pytest.mark.asyncio
-async def test_leitura_empresas(client, empresa_criada):
+async def test_leitura_empresas(client, empresa_teste):
 
     response = client.get('/empresas')
-    empresa = s_Empresas_out.model_validate(empresa_criada).model_dump(mode='json')
+    empresa = s_Empresas_out.model_validate(empresa_teste).model_dump(mode='json')
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {'empresas': [empresa]}
 
 
 @pytest.mark.asyncio
-async def test_ler_uma_empresa(client, empresa_criada, async_session):
+async def test_ler_uma_empresa(client, empresa_teste, async_session):
 
-    response = client.get(f'/empresas/{empresa_criada.id}')
+    response = client.get(f'/empresas/{empresa_teste.id}')
 
-    empresa = s_Empresas_create.model_validate(empresa_criada).model_dump(mode='json')
+    empresa = s_Empresas_create.model_validate(empresa_teste).model_dump(mode='json')
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == empresa
@@ -48,11 +48,11 @@ async def test_create_empresa(client):
 
 
 @pytest.mark.asyncio
-async def test_delete_empresa(client, empresa_criada, async_session):
+async def test_delete_empresa(client, empresa_teste, async_session):
 
-    response = client.delete(f'/empresas/{empresa_criada.id}')
+    response = client.delete(f'/empresas/{empresa_teste.id}')
 
-    stmt = select(Empresas).where(Empresas.id == empresa_criada.id)
+    stmt = select(Empresas).where(Empresas.id == empresa_teste.id)
     exists_empresa = await async_session.scalar(stmt)
 
     assert response.status_code == HTTPStatus.NO_CONTENT
@@ -60,22 +60,22 @@ async def test_delete_empresa(client, empresa_criada, async_session):
 
 
 @pytest.mark.asyncio
-async def test_update_empresa(client, empresa_criada, async_session):
+async def test_update_empresa(client, empresa_teste, async_session):
 
     dados_update = {'nome': 'ueder bunitao'}
 
-    response = client.patch(f'/empresas/{empresa_criada.id}', json=dados_update)
+    response = client.patch(f'/empresas/{empresa_teste.id}', json=dados_update)
 
-    stmt = select(Empresas).where(Empresas.id == empresa_criada.id)
+    stmt = select(Empresas).where(Empresas.id == empresa_teste.id)
     emp_bd = await async_session.scalar(stmt)
 
     assert response.status_code == HTTPStatus.OK
     assert emp_bd.nome == dados_update['nome']
-    assert emp_bd.centro_de_custo == empresa_criada.centro_de_custo
+    assert emp_bd.centro_de_custo == empresa_teste.centro_de_custo
 
 
 @pytest.mark.asyncio
-async def test_update_id_inexistente(client, empresa_criada, async_session):
+async def test_update_id_inexistente(client, empresa_teste, async_session):
 
     response = client.patch(f'/empresas/{33}', json={})
 
