@@ -6,11 +6,11 @@ from sqlalchemy import select
 from models.produtos import Produtos
 
 @pytest.mark.asyncio
-async def test_create_produto(client, async_session, criado_categoria):
+async def test_create_produto(client, async_session, categoria_teste):
     
     dados = {
 
-    'categoria_id': criado_categoria.id,
+    'categoria_id': categoria_teste.id,
     'nome': 'teste',
     'descricao': 'teste',
     'preco': 10.0,
@@ -29,10 +29,10 @@ async def test_create_produto(client, async_session, criado_categoria):
     assert produto_bd.id == response.json()['id']
 
 @pytest.mark.async_session
-async def ler_produtos(client, async_session, criado_categoria):
+async def ler_produtos(client, async_session, categoria_teste):
 
     dados = {
-        'categoria_id': criado_categoria.id,
+        'categoria_id': categoria_teste.id,
         'nome': 'teste',
         'descricao': 'teste',
         'preco': 10.0,
@@ -47,3 +47,4 @@ async def ler_produtos(client, async_session, criado_categoria):
     assert response.status_code == HTTPStatus.OK
     assert len(response.json()['produtos']) > 0
 
+    
