@@ -60,3 +60,30 @@ async def test_create_produto_duplicado(
 
     assert response.status_code == HTTPStatus.CONFLICT
     assert response.json() == {'detail': 'Produto já existe'}
+
+@pytest.mark.asyncio
+async def test_delete_produto(client, categoria_teste, produto_teste, async_session):
+
+    response = client.delete(f'/produtos/{produto_teste.id}') 
+
+    produto_existe = await async_session.scalar(select(Produtos).where(Produtos.id == produto_teste.id))
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {'message': 'Produto excluído'} 
+    assert produto_existe is None
+
+@pytest.mark.asyncio
+async def test_atualizar_produto(client, categoria_teste, produto_teste, async_session):
+
+    await async_session.refresh(categoria_teste)
+    await async_session.refresh(produto_teste)
+
+    dados = {
+        'nome': 'produto_teste_2',
+        'descricao': 'outra_descricao',
+        'categoria_id': categoria_teste.id
+    }
+
+    response = client.patch(f'/produtos/{1}', json=dados)
+
+    print(response.json())

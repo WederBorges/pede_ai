@@ -15,7 +15,7 @@ async def test_ler_categoria(client, categoria_teste):
     model_categoria_criada = s_Categorias_out.model_validate(
         categoria_teste
     ).model_dump(mode='json')
-    print(model_categoria_criada)
+
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {'categorias': [model_categoria_criada]}
 
