@@ -1,3 +1,5 @@
+from operator import and_
+
 from fastapi import APIRouter, Depends, HTTPException
 from http import HTTPStatus
 from sqlalchemy import select
@@ -83,6 +85,19 @@ async def atualizar_produto(id_produto ,dados: s_Produtos_update, session=Depend
             HTTPStatus.NOT_FOUND,
             detail='Produto inexistente'
         )
+
+    if dados.nome != produto.nome:
+        stmt = select(Produtos).where(
+            Produtos.nome == dados.nome,
+        )
+        
+        produto_divergente = await session.scalar(stmt)
+        if produto_divergente is not None:
+                raise HTTPException(
+                    HTTPStatus.CONFLICT,
+                    detail='Produto já cadastrado'
+                )
+        
     
     if dados.categoria_id is None:
         categoria = await session.scalar(select(Categoria).where(Categoria.id == produto.categoria_id))
@@ -101,8 +116,10 @@ async def atualizar_produto(id_produto ,dados: s_Produtos_update, session=Depend
     try:
         await session.commit()
         await session.refresh(produto)
+        return produto
     except IntegrityError:
         await session.rollback()
         raise HTTPException(
             HTTPStatus.CONFLICT
         )
+
