@@ -61,6 +61,7 @@ async def test_create_produto_duplicado(
     assert response.status_code == HTTPStatus.CONFLICT
     assert response.json() == {'detail': 'Produto já existe'}
 
+
 @pytest.mark.asyncio
 async def test_delete_produto(client, categoria_teste, produto_teste, async_session):
 
@@ -71,6 +72,7 @@ async def test_delete_produto(client, categoria_teste, produto_teste, async_sess
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {'message': 'Produto excluído'} 
     assert produto_existe is None
+
 
 @pytest.mark.asyncio
 async def test_atualizar_produto(client, categoria_teste, produto_teste, async_session):
@@ -91,6 +93,26 @@ async def test_atualizar_produto(client, categoria_teste, produto_teste, async_s
     assert response.status_code == HTTPStatus.OK
     assert response.json() == produto_bd_
 
+
+@pytest.mark.asyncio
+async def test_atualizar_produto_sem_nome(client, categoria_teste, produto_teste, async_session):
+
+    await async_session.refresh(categoria_teste)
+    await async_session.refresh(produto_teste)
+
+    dados = {
+        'descricao': 'outra_descricao aletaoria',
+        'categoria_id': categoria_teste.id
+    }
+
+    response = client.patch(f'/produtos/{produto_teste.id}', json=dados)
+    produto_bd = await async_session.scalar(select(Produtos).where(Produtos.id == produto_teste.id))
+    produto_bd_ = s_Produtos_update_out.model_validate(produto_bd).model_dump(mode='json')
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == produto_bd_
+
+
 @pytest.mark.asyncio
 async def test_atualizar_produto_outro_nome(client, categoria_teste, produto_teste, async_session):
 
@@ -110,6 +132,8 @@ async def test_atualizar_produto_outro_nome(client, categoria_teste, produto_tes
     
     assert response.status_code == HTTPStatus.OK
     assert response.json()['nome'] == produto_bd.nome
+
+
 @pytest.mark.asyncio
 async def test_atualizar_produto_produto_existente(client, categoria_teste, produto_teste, async_session):
 

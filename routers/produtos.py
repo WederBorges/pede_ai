@@ -86,7 +86,7 @@ async def atualizar_produto(id_produto ,dados: s_Produtos_update, session=Depend
             detail='Produto inexistente'
         )
 
-    if dados.nome != produto.nome:
+    if dados.nome is not None and dados.nome != produto.nome:
         stmt = select(Produtos).where(
             Produtos.nome == dados.nome,
         )

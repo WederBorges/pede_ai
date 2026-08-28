@@ -162,3 +162,26 @@ async def produto_teste(
     await async_session.refresh(produto)
 
     return produto
+
+
+@pytest_asyncio.fixture
+async def produto_teste_inativo(
+    async_session,
+    categoria_teste,
+):
+    await async_session.refresh(categoria_teste)
+
+    produto = Produtos(
+        categoria_id=categoria_teste.id,
+        nome='produto_teste_inativo',
+        descricao='teste',
+        preco=10.0,
+        imagem_url='https://example.com/imagem.jpg',
+        ativo=False,
+    )
+
+    async_session.add(produto)
+    await async_session.commit()
+    await async_session.refresh(produto)
+
+    return produto
