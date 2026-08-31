@@ -1,7 +1,6 @@
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException
-import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 

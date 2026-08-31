@@ -12,8 +12,10 @@ async def test_ler_catalogo(client, categoria_teste, produto_teste, produto_test
     
     response = client.get('/catalogo')
 
-    print(response.json())
+    produto_model=s_Catalogo_out.model_validate(produto_teste).model_dump(mode='json')
+
     assert response.status_code == HTTPStatus.OK
+    assert response.json() == {'produtos': [produto_model]}
     
 
 @pytest.mark.asyncio
@@ -58,14 +60,7 @@ async def test_catalogo_filtro_categoria_com_match(client, async_session,categor
 
     response = client.get('/catalogo', params=dados)
 
-    produto = await async_session.scalar(
-        select(Produtos)
-        .where(
-            Produtos.categoria_id == response.json()['produtos'][0]['categoria_id']
-            )
-        )
-
-    produto_model = s_Catalogo_out.model_validate(produto).model_dump(mode='json')
+    produto_model = s_Catalogo_out.model_validate(produto_teste).model_dump(mode='json')
     
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {'produtos': [produto_model]}
@@ -83,15 +78,7 @@ async def test_produto_filtro_com_match(client, async_session,categoria_teste, p
     response = client.get('/catalogo', params=dados)
     
 
-    produto = await async_session.scalar(
-        select(Produtos)
-        .where(
-            Produtos.nome.ilike(
-                f'%{response.json()['produtos'][0]['nome']}%')
-            )
-        )
-
-    produto_model = s_Catalogo_out.model_validate(produto).model_dump(mode='json')
+    produto_model = s_Catalogo_out.model_validate(produto_teste).model_dump(mode='json')
     
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {'produtos': [produto_model]}
@@ -110,15 +97,7 @@ async def test_produto_string_parcial_filtro_com_match(client, async_session,cat
     response = client.get('/catalogo', params=dados)
     
 
-    produto = await async_session.scalar(
-        select(Produtos)
-        .where(
-            Produtos.nome.ilike(
-                f'%{response.json()['produtos'][0]['nome']}%')
-            )
-        )
-
-    produto_model = s_Catalogo_out.model_validate(produto).model_dump(mode='json')
+    produto_model = s_Catalogo_out.model_validate(produto_teste).model_dump(mode='json')
     
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {'produtos': [produto_model]}
