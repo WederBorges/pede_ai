@@ -5,11 +5,20 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from db.sessions import async_get_session
-from models.carrinho import Carrinho
+from models.carrinho import Carrinho, CarrinhoItens
 from models.usuarios import User
 from models.empresas_e_filiais import Filiais
+from models.produtos import Produtos
 from schemas.schema_utils import Message
-from schemas.schema_carrinho import s_Produto_Output_carrinho, s_Create_carrinho, s_Create_carrinho_out, s_Produtos_response_carrinho
+from schemas.schema_carrinho import(
+     
+s_Produto_Input_carrinho, 
+s_Produto_Output_carrinho, 
+s_Create_carrinho, 
+s_Create_carrinho_out, 
+s_Produtos_response_carrinho
+
+)
 
 router = APIRouter(prefix='/carrinho')
 
@@ -46,3 +55,33 @@ async def criar_carrinho(
 
     response.status_code = HTTPStatus.OK
     return carrinho
+
+@router.post('/{id_carrinho}/produtos', response_model=s_Produtos_response_carrinho)
+async def adicionar_produto_carrinho(
+    id_carrinho: int,
+    produto_entrada: s_Produto_Input_carrinho,
+    session=Depends(async_get_session)
+):
+    carrinho = await session.scalar(select(Carrinho).where(Carrinho.id == id_carrinho))
+    produto = await session.scalar(select(Produtos).where(Produtos.id == produto_entrada.produto_id))
+
+    if carrinho is None:
+        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Carrinho inexistente')
+    if produto is None:
+        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Produto inexistente')
+
+    
+    try:
+        carrinho_item = CarrinhoItens(
+            carrinho_id=id_carrinho,
+            produto_id=produto_entrada.produto_id,
+            quantidade=produto_entrada.quantidade
+        )
+        session.add(carrinho_item)
+        await session.commit()
+        await session.refresh(carrinho_item)
+        return carrinho_item
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail='Erro ao adicionar produto ao carrinho')
