@@ -66,4 +66,28 @@ async def test_usuario_inexistente(client, async_session, usuario_teste, filial_
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {'detail': 'Usuário inexistente'}
 
+
+@pytest.mark.asyncio
+async def test_adicionar_produto_carrinho(client, async_session, usuario_teste, filial_teste, produto_teste):
     
+    await async_session.refresh(usuario_teste)
+    await async_session.refresh(filial_teste) 
+    await async_session.refresh(produto_teste)
+
+    dados_carrinho = {
+        'filial_id': filial_teste.id,
+        'usuario_id': usuario_teste.id
+    }
+    
+    response_carrinho = client.post('/carrinho', json=dados_carrinho)
+        
+    carrinho_id = response_carrinho.json()['id']
+    
+    dados_produto = {
+        'produto_id': produto_teste.id,
+        'quantidade': 2
+    }
+    response_produto = client.post(f'/carrinho/{carrinho_id}/produtos', json=dados_produto)
+    
+    print(response_produto.json())
+    assert response_produto.status_code == HTTPStatus.OK
