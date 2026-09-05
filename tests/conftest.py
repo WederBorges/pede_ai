@@ -185,3 +185,4 @@ async def produto_teste_inativo(
     await async_session.refresh(produto)
 
     return produto
+
