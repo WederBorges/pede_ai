@@ -200,28 +200,29 @@ async def test_adicionar_produto_quantidade_zero(client, async_session, usuario_
 
 
 @pytest.mark.asyncio
-async def test_remover_produto_carrinho(client, async_session, usuario_teste, filial_teste, produto_teste):
+async def test_delete_item_carrinho(
+    client, 
+    async_session, 
+    usuario_teste, 
+    filial_teste, 
+    produto_teste,
+    carrinho_com_item_teste):
     
     await async_session.refresh(usuario_teste)
     await async_session.refresh(filial_teste) 
     await async_session.refresh(produto_teste)
+    await async_session.refresh(carrinho_com_item_teste)
 
-    carrinho_id = client.post('/carrinho', json={'filial_id': filial_teste.id, 'usuario_id': usuario_teste.id}).json()['id']
+    response_produto_removido = client.delete(
+        f'/carrinho/{carrinho_com_item_teste.carrinho_id}/produtos/{carrinho_com_item_teste.produto_id}')
 
-    await async_session.refresh(produto_teste)
-
-    dados_produto = {
-        'produto_id': produto_teste.id,
-        'quantidade': 2
-    }
-  
-    response_produto_adicionado = client.post(f'/carrinho/{carrinho_id}/produtos', json=dados_produto)
-
-    await async_session.refresh(produto_teste)
-    response_produto_removido = client.delete(f'/carrinho/{carrinho_id}/produtos/{produto_teste.id}', params={'quantidade': 2})
-
-    stmt = select(CarrinhoItens).where(CarrinhoItens.carrinho_id == carrinho_id)
+    stmt = select(CarrinhoItens).where(CarrinhoItens.carrinho_id == carrinho_com_item_teste.carrinho_id)
     carrinho_item_bd = await async_session.scalar(stmt)
 
     print(response_produto_removido.json())
-    # assert response_produto_removido.status_code == HTTPStatus.OK
+    assert response_produto_removido.status_code == HTTPStatus.OK
+    assert carrinho_item_bd is None
+
+@pytest.mark.asyncio
+async def teste_carrinho(carrinho_teste):
+    print(carrinho_teste)

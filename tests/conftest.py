@@ -56,7 +56,9 @@ async def async_session():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    async with AsyncSession(engine) as session:
+    async with AsyncSession(
+        engine, expire_on_commit=False
+    ) as session:
         yield session
 
     async with engine.begin() as conn:
@@ -106,6 +108,7 @@ async def filial_teste(
 async def usuario_teste(
     async_session,
     empresa_teste,
+    filial_teste
 ):
 
     await async_session.refresh(empresa_teste)
@@ -115,7 +118,7 @@ async def usuario_teste(
         email='teste@example.com',
         senha_hash='senha_teste',
         empresa_id=empresa_teste.id,
-        filial_id=None,
+        filial_id=filial_teste.id,
         perfil='colaborador',
     )
 
@@ -186,3 +189,40 @@ async def produto_teste_inativo(
 
     return produto
 
+
+@pytest_asyncio.fixture
+async def carrinho_teste(
+    usuario_teste,
+    async_session
+):
+    from models.carrinho import Carrinho
+
+    carrinho_teste = Carrinho(
+        usuario_id=usuario_teste.id,
+        filial_id=usuario_teste.filial_id,
+    )
+
+    async_session.add(carrinho_teste)
+    await async_session.commit()
+    await async_session.refresh(carrinho_teste)
+    return carrinho_teste
+
+
+@pytest_asyncio.fixture
+async def carrinho_com_item_teste(
+    carrinho_teste,
+    produto_teste,
+    async_session
+):
+    from models.carrinho import CarrinhoItens
+
+    carrinho_com_item_teste = CarrinhoItens(
+        carrinho_id=carrinho_teste.id,
+        produto_id=produto_teste.id,
+        quantidade=1
+    )
+
+    async_session.add(carrinho_com_item_teste)
+    await async_session.commit()
+    await async_session.refresh(carrinho_com_item_teste)
+    return carrinho_com_item_teste

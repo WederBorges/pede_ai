@@ -134,12 +134,11 @@ async def adicionar_produto_carrinho(
 
 
 
-@router.delete('/{id_carrinho}/produtos/{id_produto}', response_model=s_Produtos_response_carrinho)
+@router.delete('/{id_carrinho}/produtos/{id_produto}', response_model=Message)
 async def delete_produto_carrinho(
+    response: Response,
     id_carrinho: int,
     id_produto: int,
-    quantidade: int | None = None,
-    response: Response,
     session=Depends(async_get_session)
 ):
 
@@ -161,50 +160,15 @@ async def delete_produto_carrinho(
          CarrinhoItens.produto_id == produto.id   
         )
     )
-    item_montado = {
-        'id': carrinho_e_produto.id,
-        'categoria_id': produto.categoria_id,
-        'nome': produto.nome,
-        'preco': produto.preco,
-        'quantidade': carrinho_e_produto.quantidade,
-        'preco_total': carrinho_e_produto.quantidade * produto.preco,
-        'imagem_url': produto.imagem_url,
-        }
 
-    if quantidade is not None and quantidade > 1 :
+    if carrinho_e_produto is not None:
         try:
-
-            if quantidade > carrinho_e_produto.quantidade:
-                quantidade = carrinho_e_produto.quantidade
-            elif quantidade == carrinho_e_produto.quantidade:
-                await session.delete(carrinho_e_produto.produto_id)
-                await session.commit()
-                await session.refresh(carrinho_e_produto)
-                await session.refresh(produto)
-                response.status_code = HTTPStatus.OK
-                return {'produtos_carrinho': [item_montado]}  
-
-            carrinho_e_produto.quantidade -= quantidade
+            await session.delete(carrinho_e_produto)
             await session.commit()
-            await session.refresh(carrinho_e_produto)
-            await session.refresh(produto)
-            
-            return {'produtos_carrinho': [item_montado]}    
         except IntegrityError:
-            await session.rollback()
             raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST, detail='Erro ao excluir produto do carrinho')
-        
-            
-    try:
-
-        carrinho_e_produto.quantidade -= 1
-        await session.commit()
-        await session.refresh(carrinho_e_produto)
-        await session.refresh(produto)
-        
-        return {'produtos_carrinho': [item_montado]}    
-    except IntegrityError:
-        await session.rollback()
-        raise HTTPException(
-        status_code=HTTPStatus.BAD_REQUEST, detail='Erro ao excluir produto do carrinho')
+                HTTPStatus.CONFLICT,
+                detail='Erro ao excluir item'
+            )
+    return {'message': 'item excluído com sucesso'}
+    
