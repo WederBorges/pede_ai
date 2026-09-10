@@ -208,11 +208,6 @@ async def test_delete_item_carrinho(
     produto_teste,
     carrinho_com_item_teste):
     
-    await async_session.refresh(usuario_teste)
-    await async_session.refresh(filial_teste) 
-    await async_session.refresh(produto_teste)
-    await async_session.refresh(carrinho_com_item_teste)
-
     response_produto_removido = client.delete(
         f'/carrinho/{carrinho_com_item_teste.carrinho_id}/produtos/{carrinho_com_item_teste.produto_id}')
 
@@ -224,5 +219,25 @@ async def test_delete_item_carrinho(
     assert carrinho_item_bd is None
 
 @pytest.mark.asyncio
-async def teste_carrinho(carrinho_teste):
-    print(carrinho_teste)
+async def teste_carrinho_id_inexistente(client, carrinho_com_item_teste):
+
+    carrinho = carrinho_com_item_teste
+    response = client.delete(f'carrinho/{carrinho.id + 1}/produtos/{carrinho.produto_id}')
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Carrinho inexistente'}
+
+
+@pytest.mark.asyncio
+async def teste_produto_id_inexistente(client, carrinho_com_item_teste):
+
+    carrinho = carrinho_com_item_teste
+    response = client.delete(f'carrinho/{carrinho.id}/produtos/{carrinho.produto_id + 1}')
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Produto inexistente'}
+
+@pytest.mark.asyncio
+async def teste_produto_id_inexistente(client, carrinho_com_item_teste):
+
+    carrinho_2 = client.post('carrinhos/')
