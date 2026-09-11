@@ -63,7 +63,9 @@ async def async_session():
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-
+   
+    await session.close() #entender isso dps, mas copiei e colei
+    await engine.dispose()
 
 @pytest_asyncio.fixture
 async def empresa_teste(async_session):

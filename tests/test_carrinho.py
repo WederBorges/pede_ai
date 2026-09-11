@@ -5,8 +5,12 @@ from sqlalchemy import select
 
 from models.usuarios import User
 from models.carrinho import Carrinho, CarrinhoItens
-from schemas.schema_carrinho import s_Create_carrinho_out, s_Produtos_response_carrinho, s_Produto_Output_carrinho
-
+from schemas.schema_carrinho import (
+    s_Create_carrinho_out, 
+    s_Produtos_response_carrinho, 
+    s_Produto_Output_carrinho
+)
+from schemas.schemas_usuario import s_Usuario_created
 
 @pytest.mark.asyncio
 async def test_create_carrinho(client, async_session, usuario_teste, filial_teste):
@@ -214,7 +218,7 @@ async def test_delete_item_carrinho(
     stmt = select(CarrinhoItens).where(CarrinhoItens.carrinho_id == carrinho_com_item_teste.carrinho_id)
     carrinho_item_bd = await async_session.scalar(stmt)
 
-    print(response_produto_removido.json())
+    
     assert response_produto_removido.status_code == HTTPStatus.OK
     assert carrinho_item_bd is None
 
@@ -238,6 +242,20 @@ async def teste_produto_id_inexistente(client, carrinho_com_item_teste):
     assert response.json() == {'detail': 'Produto inexistente'}
 
 @pytest.mark.asyncio
-async def teste_produto_id_inexistente(client, carrinho_com_item_teste):
+async def teste_produto_id_nao_vinculado_ao_carrinho(
+    client, 
+    carrinho_com_item_teste, 
+    carrinho_teste, 
+    produto_teste, 
+    usuario_teste
+):
 
-    carrinho_2 = client.post('carrinhos/')
+    dados = {
+        'carrinho_id':carrinho_teste.id,
+        'produto_id': produto_teste.id
+    }
+    response = client.delete(f'/carrinho/{carrinho_teste.id}/produtos{produto_teste.id}')
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+

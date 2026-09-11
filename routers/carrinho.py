@@ -57,7 +57,7 @@ async def criar_carrinho(
     return carrinho
 
 
-@router.post('/{id_carrinho}/produtos', response_model=s_Produtos_response_carrinho)
+@router.post('/{id_carrinho}/produtos/', response_model=s_Produtos_response_carrinho)
 async def adicionar_produto_carrinho(
     id_carrinho: int,
     produto_entrada: s_Produto_Input_carrinho,
