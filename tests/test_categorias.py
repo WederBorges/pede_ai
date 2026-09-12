@@ -178,3 +178,16 @@ async def test_deletar_categoria(client, categoria_teste, async_session):
 
     assert response.status_code == HTTPStatus.OK
     assert categoria_existe is None
+
+
+@pytest.mark.asyncio
+async def test_deletar_categoria_produto_vinculado(
+    client, produto_teste, async_session
+):
+
+    response = client.delete(f'/categorias/{produto_teste.categoria_id}')
+
+    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.json() == {
+        'detail': 'Existem produto(s) vinculados à esta categoria'
+    }

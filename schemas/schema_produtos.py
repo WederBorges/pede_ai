@@ -1,11 +1,11 @@
-
-from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 from decimal import Decimal
 from typing import Annotated
 
-class s_Produtos_create(BaseModel):
+from pydantic import BaseModel, ConfigDict, Field
 
+
+class s_Produtos_create(BaseModel):
     categoria_id: int
     nome: str
     descricao: str
@@ -15,8 +15,8 @@ class s_Produtos_create(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-class s_Produtos_out(BaseModel):
 
+class s_Produtos_out(BaseModel):
     id: int
     categoria_id: int
     nome: str
@@ -28,14 +28,14 @@ class s_Produtos_out(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-class s_Produtos_response(BaseModel):
 
+class s_Produtos_response(BaseModel):
     produtos: list[s_Produtos_out]
 
     model_config = ConfigDict(from_attributes=True)
 
-class s_Produtos_update(BaseModel):
 
+class s_Produtos_update(BaseModel):
     categoria_id: int | None = None
     nome: str | None = None
     descricao: str | None = None
@@ -45,8 +45,8 @@ class s_Produtos_update(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-class s_Produtos_update_out (BaseModel):
 
+class s_Produtos_update_out(BaseModel):
     id: int
     categoria_id: int
     nome: str

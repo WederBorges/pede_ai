@@ -1,14 +1,12 @@
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException
-import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from db.sessions import async_get_session
 from models.categorias import Categoria
-from schemas.schema_utils import Message
-
+from models.produtos import Produtos
 from schemas.schema_categorias import (
     s_Categorias_create,
     s_Categorias_out,
@@ -16,10 +14,12 @@ from schemas.schema_categorias import (
     s_Categorias_update,
     s_Categorias_update_out,
 )
+from schemas.schema_utils import Message
 
 router = APIRouter(prefix='/categorias')
 
-@router.get('/', status_code=HTTPStatus.OK ,response_model=s_Categorias_response)
+
+@router.get('/', status_code=HTTPStatus.OK, response_model=s_Categorias_response)
 async def ler_categorias(session=Depends(async_get_session)):
 
     categorias = await session.scalars(select(Categoria))
@@ -31,9 +31,12 @@ async def ler_categorias(session=Depends(async_get_session)):
 
     return {'categorias': categorias.all()}
 
-@router.get('/{id_categoria}', status_code=HTTPStatus.OK, response_model=s_Categorias_out)
+
+@router.get(
+    '/{id_categoria}', status_code=HTTPStatus.OK, response_model=s_Categorias_out
+)
 async def ler_categoria_unica(id_categoria: int, session=Depends(async_get_session)):
-    
+
     stmt = select(Categoria).where(Categoria.id == id_categoria)
     categoria = await session.scalar(stmt)
 
@@ -44,8 +47,11 @@ async def ler_categoria_unica(id_categoria: int, session=Depends(async_get_sessi
         status_code=HTTPStatus.NOT_FOUND, detail='Categoria não encontrada'
     )
 
+
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=s_Categorias_out)
-async def criar_categoria(categoria: s_Categorias_create, session=Depends(async_get_session)):
+async def criar_categoria(
+    categoria: s_Categorias_create, session=Depends(async_get_session)
+):
 
     stmt = select(Categoria).where(Categoria.nome == categoria.nome)
     categoria_existente = await session.scalar(stmt)
@@ -69,8 +75,14 @@ async def criar_categoria(categoria: s_Categorias_create, session=Depends(async_
     return db_categoria
 
 
-@router.patch('/{id_categoria}', status_code=HTTPStatus.OK, response_model=s_Categorias_update_out)
-async def atualizar_categoria(id_categoria: int, categoria: s_Categorias_update, session=Depends(async_get_session)):
+@router.patch(
+    '/{id_categoria}', status_code=HTTPStatus.OK, response_model=s_Categorias_update_out
+)
+async def atualizar_categoria(
+    id_categoria: int,
+    categoria: s_Categorias_update,
+    session=Depends(async_get_session),
+):
 
     stmt = select(Categoria).where(Categoria.id == id_categoria)
     db_categoria = await session.scalar(stmt)
@@ -80,7 +92,7 @@ async def atualizar_categoria(id_categoria: int, categoria: s_Categorias_update,
             status_code=HTTPStatus.NOT_FOUND, detail='Categoria não encontrada'
         )
 
-    if  categoria.nome is not None and db_categoria.nome != categoria.nome:
+    if categoria.nome is not None and db_categoria.nome != categoria.nome:
         stmt = select(Categoria).where(Categoria.nome == categoria.nome)
         categoria_existente = await session.scalar(stmt)
 
@@ -103,6 +115,7 @@ async def atualizar_categoria(id_categoria: int, categoria: s_Categorias_update,
 
     return db_categoria
 
+
 @router.delete('/{id_categoria}', status_code=HTTPStatus.OK, response_model=Message)
 async def deletar_categoria(id_categoria: int, session=Depends(async_get_session)):
 
@@ -112,6 +125,15 @@ async def deletar_categoria(id_categoria: int, session=Depends(async_get_session
     if not db_categoria:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='Categoria não encontrada'
+        )
+
+    produto_vinculado = await session.scalar(
+        select(Produtos).where(Produtos.categoria_id == id_categoria)
+    )
+    if produto_vinculado is not None:
+        raise HTTPException(
+            status_code=HTTPStatus.CONFLICT,
+            detail='Existem produto(s) vinculados à esta categoria',
         )
 
     try:

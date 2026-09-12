@@ -56,16 +56,15 @@ async def async_session():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    async with AsyncSession(
-        engine, expire_on_commit=False
-    ) as session:
+    async with AsyncSession(engine, expire_on_commit=False) as session:
         yield session
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-   
-    await session.close() #entender isso dps, mas copiei e colei
+
+    await session.close()  # entender isso dps, mas copiei e colei
     await engine.dispose()
+
 
 @pytest_asyncio.fixture
 async def empresa_teste(async_session):
@@ -107,11 +106,7 @@ async def filial_teste(
 
 
 @pytest_asyncio.fixture
-async def usuario_teste(
-    async_session,
-    empresa_teste,
-    filial_teste
-):
+async def usuario_teste(async_session, empresa_teste, filial_teste):
 
     await async_session.refresh(empresa_teste)
 
@@ -193,10 +188,7 @@ async def produto_teste_inativo(
 
 
 @pytest_asyncio.fixture
-async def carrinho_teste(
-    usuario_teste,
-    async_session
-):
+async def carrinho_teste(usuario_teste, async_session):
     from models.carrinho import Carrinho
 
     carrinho_teste = Carrinho(
@@ -211,17 +203,11 @@ async def carrinho_teste(
 
 
 @pytest_asyncio.fixture
-async def carrinho_com_item_teste(
-    carrinho_teste,
-    produto_teste,
-    async_session
-):
+async def carrinho_com_item_teste(carrinho_teste, produto_teste, async_session):
     from models.carrinho import CarrinhoItens
 
     carrinho_com_item_teste = CarrinhoItens(
-        carrinho_id=carrinho_teste.id,
-        produto_id=produto_teste.id,
-        quantidade=1
+        carrinho_id=carrinho_teste.id, produto_id=produto_teste.id, quantidade=1
     )
 
     async_session.add(carrinho_com_item_teste)

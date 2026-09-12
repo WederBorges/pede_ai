@@ -40,6 +40,26 @@ async def test_ler_produtos(client, async_session, produto_teste):
 
 
 @pytest.mark.asyncio
+async def test_ler_produto_un(client, async_session, produto_teste):
+
+    response = client.get(f'/produtos/{produto_teste.id}')
+
+    produto_bd = s_Produtos_out.model_validate(produto_teste).model_dump(mode='json')
+    print(type(produto_bd))
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == produto_bd
+
+
+@pytest.mark.asyncio
+async def test_ler_produto_un_inexistente(client, async_session, produto_teste):
+
+    response = client.get(f'/produtos/{produto_teste.id + 1}')
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Produto inexistente'}
+
+
+@pytest.mark.asyncio
 async def test_create_produto_duplicado(
     client, async_session, produto_teste, categoria_teste
 ):
@@ -65,12 +85,14 @@ async def test_create_produto_duplicado(
 @pytest.mark.asyncio
 async def test_delete_produto(client, categoria_teste, produto_teste, async_session):
 
-    response = client.delete(f'/produtos/{produto_teste.id}') 
+    response = client.delete(f'/produtos/{produto_teste.id}')
 
-    produto_existe = await async_session.scalar(select(Produtos).where(Produtos.id == produto_teste.id))
+    produto_existe = await async_session.scalar(
+        select(Produtos).where(Produtos.id == produto_teste.id)
+    )
 
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {'message': 'Produto excluído'} 
+    assert response.json() == {'message': 'Produto excluído'}
     assert produto_existe is None
 
 
@@ -83,65 +105,80 @@ async def test_atualizar_produto(client, categoria_teste, produto_teste, async_s
     dados = {
         'nome': 'teste',
         'descricao': 'outra_descricao aletaoria',
-        'categoria_id': categoria_teste.id
+        'categoria_id': categoria_teste.id,
     }
 
     response = client.patch(f'/produtos/{produto_teste.id}', json=dados)
-    produto_bd = await async_session.scalar(select(Produtos).where(Produtos.id == produto_teste.id))
-    produto_bd_ = s_Produtos_update_out.model_validate(produto_bd).model_dump(mode='json')
+    produto_bd = await async_session.scalar(
+        select(Produtos).where(Produtos.id == produto_teste.id)
+    )
+    produto_bd_ = s_Produtos_update_out.model_validate(produto_bd).model_dump(
+        mode='json'
+    )
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == produto_bd_
 
 
 @pytest.mark.asyncio
-async def test_atualizar_produto_sem_nome(client, categoria_teste, produto_teste, async_session):
+async def test_atualizar_produto_sem_nome(
+    client, categoria_teste, produto_teste, async_session
+):
 
     await async_session.refresh(categoria_teste)
     await async_session.refresh(produto_teste)
 
     dados = {
         'descricao': 'outra_descricao aletaoria',
-        'categoria_id': categoria_teste.id
+        'categoria_id': categoria_teste.id,
     }
 
     response = client.patch(f'/produtos/{produto_teste.id}', json=dados)
-    produto_bd = await async_session.scalar(select(Produtos).where(Produtos.id == produto_teste.id))
-    produto_bd_ = s_Produtos_update_out.model_validate(produto_bd).model_dump(mode='json')
+    produto_bd = await async_session.scalar(
+        select(Produtos).where(Produtos.id == produto_teste.id)
+    )
+    produto_bd_ = s_Produtos_update_out.model_validate(produto_bd).model_dump(
+        mode='json'
+    )
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == produto_bd_
 
 
 @pytest.mark.asyncio
-async def test_atualizar_produto_outro_nome(client, categoria_teste, produto_teste, async_session):
+async def test_atualizar_produto_outro_nome(
+    client, categoria_teste, produto_teste, async_session
+):
 
     await async_session.refresh(categoria_teste)
     await async_session.refresh(produto_teste)
 
     dados = {
-        'nome': f"{produto_teste.nome} + {produto_teste.nome}",
+        'nome': f'{produto_teste.nome} + {produto_teste.nome}',
         'descricao': 'outra_descricao aletaoria',
-        'categoria_id': categoria_teste.id
+        'categoria_id': categoria_teste.id,
     }
 
     response = client.patch(f'/produtos/{produto_teste.id}', json=dados)
 
-    produto_bd = await async_session.scalar(select(Produtos).where(Produtos.id == produto_teste.id))
+    produto_bd = await async_session.scalar(
+        select(Produtos).where(Produtos.id == produto_teste.id)
+    )
 
-    
     assert response.status_code == HTTPStatus.OK
     assert response.json()['nome'] == produto_bd.nome
 
 
 @pytest.mark.asyncio
-async def test_atualizar_produto_produto_existente(client, categoria_teste, produto_teste, async_session):
+async def test_atualizar_produto_produto_existente(
+    client, categoria_teste, produto_teste, async_session
+):
 
     await async_session.refresh(categoria_teste)
     await async_session.refresh(produto_teste)
 
     dados = {
-        'categoria_id':categoria_teste.id ,
+        'categoria_id': categoria_teste.id,
         'nome': 'product_nielo',
         'descricao': 'teste',
         'preco': 10.0,
@@ -157,10 +194,10 @@ async def test_atualizar_produto_produto_existente(client, categoria_teste, prod
     dados = {
         'nome': new_product.json()['nome'],
         'descricao': 'outra_descricao aletaoria',
-        'categoria_id': categoria_teste.id
+        'categoria_id': categoria_teste.id,
     }
 
     response = client.patch(f'/produtos/{produto_teste.id}', json=dados)
 
     assert response.status_code == HTTPStatus.CONFLICT
-    assert response.json() == {'detail':'Produto já cadastrado'}
+    assert response.json() == {'detail': 'Produto já cadastrado'}

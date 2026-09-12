@@ -6,27 +6,24 @@ from sqlalchemy.exc import IntegrityError
 
 from db.sessions import async_get_session
 from models.carrinho import Carrinho, CarrinhoItens
-from models.usuarios import User
 from models.empresas_e_filiais import Filiais
 from models.produtos import Produtos
-from schemas.schema_utils import Message
-from schemas.schema_carrinho import(
-     
-s_Produto_Input_carrinho, 
-s_Produto_Output_carrinho, 
-s_Create_carrinho, 
-s_Create_carrinho_out, 
-s_Produtos_response_carrinho
-
+from models.usuarios import User
+from schemas.schema_carrinho import (
+    s_Create_carrinho,
+    s_Create_carrinho_out,
+    s_Produto_Input_carrinho,
+    s_Produtos_response_carrinho,
 )
+from schemas.schema_utils import Message
 
 router = APIRouter(prefix='/carrinho')
 
+
 @router.post('/', response_model=s_Create_carrinho_out)
 async def criar_carrinho(
-    dados: s_Create_carrinho,
-    response: Response, 
-    session=Depends(async_get_session)):
+    dados: s_Create_carrinho, response: Response, session=Depends(async_get_session)
+):
 
     filial = await session.scalar(select(Filiais).where(Filiais.id == dados.filial_id))
     usuario = await session.scalar(select(User).where(User.id == dados.usuario_id))
@@ -37,11 +34,13 @@ async def criar_carrinho(
     if usuario is None:
         raise HTTPException(HTTPStatus.NOT_FOUND, detail='Usuário inexistente')
 
-    carrinho = await session.scalar(select(Carrinho).where(Carrinho.usuario_id == usuario.id ))
+    carrinho = await session.scalar(
+        select(Carrinho).where(Carrinho.usuario_id == usuario.id)
+    )
 
     if carrinho is None:
         carrinho = Carrinho(**dados.model_dump())
-        
+
         try:
             session.add(carrinho)
             await session.commit()
@@ -51,7 +50,8 @@ async def criar_carrinho(
         except IntegrityError:
             await session.rollback()
             raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST, detail='Erro ao criar carrinho')
+                status_code=HTTPStatus.BAD_REQUEST, detail='Erro ao criar carrinho'
+            )
 
     response.status_code = HTTPStatus.OK
     return carrinho
@@ -61,12 +61,13 @@ async def criar_carrinho(
 async def adicionar_produto_carrinho(
     id_carrinho: int,
     produto_entrada: s_Produto_Input_carrinho,
-    session=Depends(async_get_session)
+    session=Depends(async_get_session),
 ):
 
-
     carrinho = await session.scalar(select(Carrinho).where(Carrinho.id == id_carrinho))
-    produto = await session.scalar(select(Produtos).where(Produtos.id == produto_entrada.produto_id))
+    produto = await session.scalar(
+        select(Produtos).where(Produtos.id == produto_entrada.produto_id)
+    )
 
     if carrinho is None:
         raise HTTPException(HTTPStatus.NOT_FOUND, detail='Carrinho inexistente')
@@ -75,18 +76,17 @@ async def adicionar_produto_carrinho(
 
     carrinho_e_produto = await session.scalar(
         select(CarrinhoItens).where(
-                CarrinhoItens.carrinho_id == id_carrinho,
-                CarrinhoItens.produto_id == produto_entrada.produto_id
-            )
+            CarrinhoItens.carrinho_id == id_carrinho,
+            CarrinhoItens.produto_id == produto_entrada.produto_id,
         )
-
+    )
 
     if carrinho_e_produto is None:
         try:
             carrinho_item = CarrinhoItens(
                 carrinho_id=id_carrinho,
                 produto_id=produto_entrada.produto_id,
-                quantidade=produto_entrada.quantidade
+                quantidade=produto_entrada.quantidade,
             )
             session.add(carrinho_item)
             await session.commit()
@@ -101,13 +101,15 @@ async def adicionar_produto_carrinho(
                 'quantidade': carrinho_item.quantidade,
                 'preco_total': carrinho_item.quantidade * produto.preco,
                 'imagem_url': produto.imagem_url,
-                }
+            }
 
             return {'produtos_carrinho': [item_montado]}
         except IntegrityError:
             await session.rollback()
             raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST, detail='Erro ao adicionar produto ao carrinho')
+                status_code=HTTPStatus.BAD_REQUEST,
+                detail='Erro ao adicionar produto ao carrinho',
+            )
 
     else:
         carrinho_e_produto.quantidade += produto_entrada.quantidade
@@ -124,14 +126,15 @@ async def adicionar_produto_carrinho(
                 'quantidade': carrinho_e_produto.quantidade,
                 'preco_total': carrinho_e_produto.quantidade * produto.preco,
                 'imagem_url': produto.imagem_url,
-                }
+            }
 
             return {'produtos_carrinho': [item_montado]}
         except IntegrityError:
             await session.rollback()
             raise HTTPException(
-                status_code=HTTPStatus.BAD_REQUEST, detail='Erro ao atualizar quantidade do produto no carrinho')
-
+                status_code=HTTPStatus.BAD_REQUEST,
+                detail='Erro ao atualizar quantidade do produto no carrinho',
+            )
 
 
 @router.delete('/{id_carrinho}/produtos/{id_produto}', response_model=Message)
@@ -139,36 +142,33 @@ async def delete_produto_carrinho(
     response: Response,
     id_carrinho: int,
     id_produto: int,
-    session=Depends(async_get_session)
+    session=Depends(async_get_session),
 ):
 
     carrinho = await session.scalar(select(Carrinho).where(Carrinho.id == id_carrinho))
     produto = await session.scalar(select(Produtos).where(Produtos.id == id_produto))
 
     if carrinho is None:
-        raise HTTPException(
-            HTTPStatus.NOT_FOUND, detail='Carrinho inexistente'
-        )
+        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Carrinho inexistente')
     if produto is None:
-        raise HTTPException(
-            HTTPStatus.NOT_FOUND, detail='Produto inexistente'
-        )
+        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Produto inexistente')
 
     carrinho_e_produto = await session.scalar(
         select(CarrinhoItens).where(
-         CarrinhoItens.carrinho_id == carrinho.id,
-         CarrinhoItens.produto_id == produto.id   
+            CarrinhoItens.carrinho_id == carrinho.id,
+            CarrinhoItens.produto_id == produto.id,
         )
     )
 
-    if carrinho_e_produto is not None:
-        try:
-            await session.delete(carrinho_e_produto)
-            await session.commit()
-        except IntegrityError:
-            raise HTTPException(
-                HTTPStatus.CONFLICT,
-                detail='Erro ao excluir item'
-            )
+    if carrinho_e_produto is None:
+        raise HTTPException(
+            HTTPStatus.NOT_FOUND, detail='Produto não vinculado ao carrinho'
+        )
+
+    try:
+        await session.delete(carrinho_e_produto)
+        await session.commit()
+    except IntegrityError:
+        raise HTTPException(HTTPStatus.CONFLICT, detail='Erro ao excluir item')
+
     return {'message': 'item excluído com sucesso'}
-    

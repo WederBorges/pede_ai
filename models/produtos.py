@@ -1,7 +1,15 @@
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import TIMESTAMP, Boolean, CheckConstraint, ForeignKey, Numeric, String, func
+from sqlalchemy import (
+    TIMESTAMP,
+    Boolean,
+    CheckConstraint,
+    ForeignKey,
+    Numeric,
+    String,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.base import Base
@@ -11,12 +19,16 @@ class Produtos(Base):
     __tablename__ = 'produtos'
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
-    categoria_id: Mapped[int] = mapped_column(ForeignKey('categorias.id'), nullable=False)
+    categoria_id: Mapped[int] = mapped_column(
+        ForeignKey('categorias.id'), nullable=False
+    )
     nome: Mapped[str] = mapped_column(String(100), nullable=False)
     descricao: Mapped[str] = mapped_column(String(255), nullable=False)
     preco: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     imagem_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     ativo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP, nullable=False, server_default=func.now()
+    )
 
     __table_args__ = (CheckConstraint('preco >= 0', name='ck_preco_uni_positivo'),)

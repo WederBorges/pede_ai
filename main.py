@@ -1,7 +1,15 @@
 from fastapi import FastAPI
 
 from models import categorias
-from routers import empresas, filiais, usuarios, categorias, produtos, catalogos, carrinho
+from routers import (
+    carrinho,
+    catalogos,
+    categorias,
+    empresas,
+    filiais,
+    produtos,
+    usuarios,
+)
 
 app = FastAPI()
 
