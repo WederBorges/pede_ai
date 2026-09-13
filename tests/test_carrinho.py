@@ -19,6 +19,7 @@ async def test_create_carrinho(client, async_session, usuario_teste, filial_test
 
     response = client.post('/carrinho', json=dados)
 
+    print(response.json())
     await async_session.refresh(usuario_teste)
     await async_session.refresh(filial_teste)
 

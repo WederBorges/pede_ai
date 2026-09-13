@@ -17,7 +17,7 @@ from schemas.schema_carrinho import (
 )
 from schemas.schema_utils import Message
 
-router = APIRouter(prefix='/carrinho')
+router = APIRouter(prefix='/carrinho', tags=['Carrinho'])
 
 
 @router.post('/', response_model=s_Create_carrinho_out)
@@ -47,8 +47,9 @@ async def criar_carrinho(
             await session.refresh(carrinho)
             response.status_code = HTTPStatus.CREATED
             return carrinho
-        except IntegrityError:
+        except IntegrityError as error:
             await session.rollback()
+            print(error)
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST, detail='Erro ao criar carrinho'
             )

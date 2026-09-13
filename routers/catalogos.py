@@ -1,5 +1,7 @@
 from http import HTTPStatus
 
+from anyio import TaskHandle
+
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 
@@ -9,7 +11,7 @@ from schemas.schema_catalogo import (
     s_Catalogo_response,
 )
 
-router = APIRouter(prefix='/catalogo')
+router = APIRouter(prefix='/catalogo', tags=['Catálogo'])
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=s_Catalogo_response)

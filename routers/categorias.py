@@ -16,7 +16,7 @@ from schemas.schema_categorias import (
 )
 from schemas.schema_utils import Message
 
-router = APIRouter(prefix='/categorias')
+router = APIRouter(prefix='/categorias', tags=['Categorias'])
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=s_Categorias_response)

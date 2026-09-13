@@ -7,3 +7,4 @@ from .pedidos import Pedidos as Pedidos
 from .pedidos import PedidoStatusHistorico as PedidoStatusHistorico
 from .produtos import Produtos as Produtos
 from .usuarios import User as User
+from .categorias import Categoria as Categoria

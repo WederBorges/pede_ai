@@ -14,7 +14,7 @@ from schemas.schema_empresas import (
     s_Empresas_update_out,
 )
 
-router = APIRouter(prefix='/empresas')
+router = APIRouter(prefix='/empresas', tags=['Empresas'])
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=s_Empresas_response)

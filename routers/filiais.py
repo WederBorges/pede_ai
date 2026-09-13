@@ -15,7 +15,7 @@ from schemas.schema_filiais import (
 )
 from schemas.schema_utils import Message
 
-router = APIRouter(prefix='/filiais')
+router = APIRouter(prefix='/filiais', tags=['Filiais'])
 
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=s_Filiais_response)

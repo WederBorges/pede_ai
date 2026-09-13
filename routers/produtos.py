@@ -17,7 +17,7 @@ from schemas.schema_produtos import (
 )
 from schemas.schema_utils import Message
 
-router = APIRouter(prefix='/produtos')
+router = APIRouter(prefix='/produtos', tags=['Produtos'])
 
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=s_Produtos_out)
@@ -89,32 +89,50 @@ async def apagar_produto(id_produto, session=Depends(async_get_session)):
     '/{id_produto}', status_code=HTTPStatus.OK, response_model=s_Produtos_update_out
 )
 async def atualizar_produto(
-    id_produto, dados: s_Produtos_update, session=Depends(async_get_session)
+    id_produto: int, dados: s_Produtos_update, session=Depends(async_get_session)
 ):
 
     produto = await session.scalar(select(Produtos).where(Produtos.id == id_produto))
 
+    #valida se produto existe
     if produto is None:
-        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Produto inexistente')
-
-    if dados.nome is not None and dados.nome != produto.nome:
-        stmt = select(Produtos).where(
-            Produtos.nome == dados.nome,
-        )
-
-        produto_divergente = await session.scalar(stmt)
-        if produto_divergente is not None:
-            raise HTTPException(HTTPStatus.CONFLICT, detail='Produto já cadastrado')
-
-    if dados.categoria_id is None:
-        categoria = await session.scalar(
-            select(Categoria).where(Categoria.id == produto.categoria_id)
-        )
-        dados.categoria_id = categoria.id
-        if categoria is None:
-            raise HTTPException(HTTPStatus.NOT_FOUND, detail='Produto inexistente')
+        raise HTTPException(
+            HTTPStatus.NOT_FOUND, 
+            detail='Produto inexistente')
 
     db_produto = dados.model_dump(exclude_unset=True)
+
+    #verifica se o nome 
+    if 'nome' in db_produto:
+        novo_nome = db_produto['nome']
+
+        if novo_nome != produto.nome:
+            produto_existente = await session.scalar(select(Produtos).where(
+                    Produtos.nome == novo_nome,
+                    Produtos.id != id_produto
+            )
+        )
+
+        if produto_existente is not None:
+            raise HTTPException(
+                HTTPStatus.CONFLICT,
+                detail='Produto já cadastrado')
+                        
+    if 'categoria' in db_produto:
+        nova_categoria = db_produto['categoria']
+
+        if nova_categoria != produto.categoria:
+            categoria_existente = await session.scalar(select(Produtos).where(
+                    Produtos.categoria_id != db_produto['categoria_id']
+            )
+        )
+
+        if categoria_existente is None:
+            raise HTTPException(
+                HTTPStatus.CONFLICT,
+                detail='Categoria inexistente')
+                        
+
 
     for key, value in db_produto.items():
         setattr(produto, key, value)
@@ -125,4 +143,7 @@ async def atualizar_produto(
         return produto
     except IntegrityError:
         await session.rollback()
-        raise HTTPException(HTTPStatus.CONFLICT)
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            detail='Erro ao atualizar produto',
+        )

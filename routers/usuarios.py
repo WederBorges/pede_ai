@@ -16,7 +16,7 @@ from schemas.schemas_usuario import (
 )
 from services.services_usuarios import validar_filial_e_empresas
 
-router = APIRouter(prefix='/usuarios')
+router = APIRouter(prefix='/usuarios', tags=['Usuários'])
 
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=s_Usuario_out)
