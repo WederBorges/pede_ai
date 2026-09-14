@@ -20,6 +20,19 @@ from schemas.schema_utils import Message
 router = APIRouter(prefix='/carrinho', tags=['Carrinho'])
 
 
+@router.get('/{id_carrinho}', response_model=s_Create_carrinho_out)
+async def ler_carrinho(
+    id_carrinho: int, session=Depends(async_get_session)
+):
+
+    carrinho = await session.scalar(select(Carrinho).where(Carrinho.id == id_carrinho))
+
+    if carrinho is None:
+        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Carrinho inexistente')
+
+    return carrinho
+
+
 @router.post('/', response_model=s_Create_carrinho_out)
 async def criar_carrinho(
     dados: s_Create_carrinho, response: Response, session=Depends(async_get_session)
@@ -173,3 +186,61 @@ async def delete_produto_carrinho(
         raise HTTPException(HTTPStatus.CONFLICT, detail='Erro ao excluir item')
 
     return {'message': 'item excluído com sucesso'}
+
+
+@router.patch('/{id_carrinho}', response_model=s_Produtos_response_carrinho)
+async def atualizar_quantidade_produto_carrinho(
+    id_carrinho: int,
+    produto_entrada: s_Produto_Input_carrinho,
+    session=Depends(async_get_session),
+):
+
+    carrinho = await session.scalar(select(Carrinho).where(Carrinho.id == id_carrinho))
+    produto = await session.scalar(select(Produtos).where(Produtos.id == produto_entrada.produto_id))
+
+    if carrinho is None:
+        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Carrinho inexistente')
+    if produto is None:
+        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Produto inexistente')
+
+    carrinho_e_produto = await session.scalar(
+        select(CarrinhoItens).where(
+            CarrinhoItens.carrinho_id == carrinho.id,
+            CarrinhoItens.produto_id == produto.id,
+        )
+    )
+
+    if carrinho_e_produto is None:
+        raise HTTPException(
+            HTTPStatus.NOT_FOUND, detail='Produto não vinculado ao carrinho'
+        )
+
+    if produto_entrada.quantidade <= 0:
+        raise HTTPException(
+            HTTPStatus.UNPROCESSABLE_ENTITY, detail='Quantidade inválida'
+        )
+
+    carrinho_e_produto.quantidade = produto_entrada.quantidade
+
+    try:
+        await session.commit()
+        await session.refresh(carrinho_e_produto)
+        await session.refresh(produto)
+
+        item_montado = {
+            'id': carrinho_e_produto.id,
+            'categoria_id': produto.categoria_id,
+            'nome': produto.nome,
+            'preco': produto.preco,
+            'quantidade': carrinho_e_produto.quantidade,
+            'preco_total': carrinho_e_produto.quantidade * produto.preco,
+            'imagem_url': produto.imagem_url,
+        }
+
+        return {'produtos_carrinho': [item_montado]}
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail='Erro ao atualizar quantidade do produto no carrinho',
+        )

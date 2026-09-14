@@ -29,6 +29,24 @@ async def test_create_produto(client, async_session, categoria_teste):
 
 
 @pytest.mark.asyncio
+async def test_create_produto_CATEGORIA_INEXISTENTE(client, async_session, categoria_teste):
+
+    dados = {
+        'categoria_id': categoria_teste.id + 9999,
+        'nome': 'teste',
+        'descricao': 'teste',
+        'preco': 10.0,
+        'imagem_url': 'https://example.com/imagem.jpg',
+        'ativo': True,
+    }
+
+    response = client.post('/produtos', json=dados)
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Categoria inexistente'}
+
+
+@pytest.mark.asyncio
 async def test_ler_produtos(client, async_session, produto_teste):
 
     response = client.get('/produtos')
@@ -45,7 +63,6 @@ async def test_ler_produto_un(client, async_session, produto_teste):
     response = client.get(f'/produtos/{produto_teste.id}')
 
     produto_bd = s_Produtos_out.model_validate(produto_teste).model_dump(mode='json')
-    print(type(produto_bd))
     assert response.status_code == HTTPStatus.OK
     assert response.json() == produto_bd
 
@@ -97,10 +114,18 @@ async def test_delete_produto(client, categoria_teste, produto_teste, async_sess
 
 
 @pytest.mark.asyncio
-async def test_atualizar_produto(client, categoria_teste, produto_teste, async_session):
+async def test_delete_produto_inexistente(client, categoria_teste, produto_teste, async_session):
 
-    await async_session.refresh(categoria_teste)
-    await async_session.refresh(produto_teste)
+    response = client.delete(f'/produtos/{produto_teste.id + 1}')
+
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Produto inexistente'}
+
+
+
+@pytest.mark.asyncio
+async def test_atualizar_produto(client, categoria_teste, produto_teste, async_session):
 
     dados = {
         'nome': 'teste',
@@ -118,6 +143,21 @@ async def test_atualizar_produto(client, categoria_teste, produto_teste, async_s
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == produto_bd_
+
+
+@pytest.mark.asyncio
+async def test_atualizar_produto_inexistente(client, categoria_teste, produto_teste, async_session):
+
+    dados = {
+        'nome': 'teste',
+        'descricao': 'outra_descricao aletaoria',
+        'categoria_id': categoria_teste.id,
+    }
+
+    response = client.patch(f'/produtos/{produto_teste.id + 1}', json=dados)
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
 
 
 @pytest.mark.asyncio
