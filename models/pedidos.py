@@ -1,9 +1,10 @@
 from datetime import datetime
 from decimal import Decimal
+from enum import Enum
 
-from sqlalchemy import TIMESTAMP, CheckConstraint, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Enum as SQLALCHEMYENUM,TIMESTAMP, CheckConstraint, func,ForeignKey, Integer, Numeric, String, DATE, null
 from sqlalchemy.orm import Mapped, mapped_column
-
+from models.enums_pedido import Status_Pedidos
 from db.base import Base
 
 # ## pedidos
@@ -21,13 +22,15 @@ class Pedidos(Base):
     __tablename__ = 'pedidos'
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    carrinho_id: Mapped[int|None] = mapped_column(ForeignKey('carrinho.id', ondelete='SET NULL'),  nullable=True)
     empresa_id: Mapped[int] = mapped_column(ForeignKey('empresas.id'), nullable=False)
     filial_id: Mapped[int] = mapped_column(ForeignKey('filiais.id'), nullable=False)
     usuario_id: Mapped[int] = mapped_column(ForeignKey('usuarios.id'), nullable=False)
-    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    status: Mapped[Status_Pedidos] = mapped_column(SQLALCHEMYENUM(Status_Pedidos), default=Status_Pedidos.PENDENTE, nullable=False)
     valor_total: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
-    previsao_entrega: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
+    previsao_entrega: Mapped[datetime] = mapped_column(DATE, nullable=True)
+    entregue_em: Mapped[datetime] = mapped_column(DATE, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=func.now(),nullable=False)
 
     __table_args__ = (
         CheckConstraint('valor_total >= 0', name='ck_valor_positivo_total_pedidos'),
@@ -53,7 +56,6 @@ class PedidoItens(Base):
     nome_produto: Mapped[str] = mapped_column(String(100), nullable=False)
     preco_unitario: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     quantidade: Mapped[int] = mapped_column(Integer, nullable=False)
-    subtotal: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 
     __table_args__ = (
         CheckConstraint('quantidade > 0', name='ck_pedido_itens_quantidade_positiva'),
@@ -75,7 +77,7 @@ class PedidoStatusHistorico(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
     pedido_id: Mapped[int] = mapped_column(ForeignKey('pedidos.id'), nullable=False)
-    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    status: Mapped[Status_Pedidos] = mapped_column(SQLALCHEMYENUM(Status_Pedidos), nullable=False)
     observacao: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=func.now(), nullable=False)
     alterado_por: Mapped[int] = mapped_column(ForeignKey('usuarios.id'), nullable=False)
