@@ -27,14 +27,9 @@ class Pedidos(Base):
     filial_id: Mapped[int] = mapped_column(ForeignKey('filiais.id'), nullable=False)
     usuario_id: Mapped[int] = mapped_column(ForeignKey('usuarios.id'), nullable=False)
     status: Mapped[Status_Pedidos] = mapped_column(SQLALCHEMYENUM(Status_Pedidos), default=Status_Pedidos.PENDENTE, nullable=False)
-    valor_total: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     previsao_entrega: Mapped[datetime] = mapped_column(DATE, nullable=True)
     entregue_em: Mapped[datetime] = mapped_column(DATE, nullable=True)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=func.now(),nullable=False)
-
-    __table_args__ = (
-        CheckConstraint('valor_total >= 0', name='ck_valor_positivo_total_pedidos'),
-    )
 
 
 # ## pedido_itens

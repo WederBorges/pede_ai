@@ -214,3 +214,17 @@ async def carrinho_com_item_teste(carrinho_teste, produto_teste, async_session):
     await async_session.commit()
     await async_session.refresh(carrinho_com_item_teste)
     return carrinho_com_item_teste
+
+@pytest_asyncio.fixture
+async def pedido_teste(carrinho_com_item_teste, async_session):
+    from models.pedidos import Pedidos
+
+    pedido_teste = Pedidos(
+        carrinho_id=carrinho_com_item_teste.carrinho_id,
+        status='pendente',
+    )
+
+    async_session.add(pedido_teste)
+    await async_session.commit()
+    await async_session.refresh(pedido_teste)
+    return pedido_teste
