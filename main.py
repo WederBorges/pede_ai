@@ -9,6 +9,7 @@ from routers import (
     filiais,
     produtos,
     usuarios,
+    pedidos
 )
 
 app = FastAPI()
@@ -20,3 +21,4 @@ app.include_router(categorias.router)
 app.include_router(produtos.router)
 app.include_router(catalogos.router)
 app.include_router(carrinho.router)
+app.include_router(pedidos.router)

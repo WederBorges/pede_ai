@@ -6,6 +6,9 @@ from typing import Annotated
 from decimal import Decimal
 from pydantic import Field
 from models.enums_pedido import Status_Pedidos
+
+
+
 class s_Pedido_Create(BaseModel):
     carrinho_id: int
 
