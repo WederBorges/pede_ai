@@ -1,12 +1,12 @@
+from decimal import Decimal
 from http import HTTPStatus
-from math import e
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from db.sessions import async_get_session
-from models.pedidos import PedidoItens, Pedidos
+from db.sessions import async_get_session   
+from models.pedidos import PedidoItens, Pedidos, PedidoStatusHistorico
 from models.enums_pedido import Status_Pedidos
 from models.empresas_e_filiais import Empresas, Filiais
 from models.carrinho import Carrinho, CarrinhoItens
@@ -20,8 +20,6 @@ from schemas.schema_pedidos import (
 )
 
 
-from schemas.schema_utils import Message
-from tests.conftest import produto_teste
 router = APIRouter(prefix='/pedido', tags=['Pedido'])
 
 @router.post('/', response_model=s_pedido_response, status_code=HTTPStatus.CREATED)
@@ -33,6 +31,7 @@ async def criar_pedido(dado_carrinho_id: s_Pedido_Create, session=Depends(async_
 
 
     carrinho = await session.scalar(select(Carrinho).where(Carrinho.id == dado_carrinho_id.carrinho_id)) #verifica se o carrinho existe no banco de dados
+
     if carrinho is None:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
@@ -47,7 +46,7 @@ async def criar_pedido(dado_carrinho_id: s_Pedido_Create, session=Depends(async_
     filial = await session.scalar(select(Filiais).where(Filiais.id == carrinho.filial_id))
         
 
-    carrinho_itens = await session.scalars(select(CarrinhoItens).where(CarrinhoItens.carrinho_id == carrinho.id)).all()
+    carrinho_itens = (await session.scalars(select(CarrinhoItens).where(CarrinhoItens.carrinho_id == carrinho.id))).all()
     
     
     objeto_produto = (
@@ -60,8 +59,7 @@ async def criar_pedido(dado_carrinho_id: s_Pedido_Create, session=Depends(async_
         )
     ).all()
 
-    vt = []
-
+  
     
     pedido = Pedidos(
 
@@ -76,41 +74,69 @@ async def criar_pedido(dado_carrinho_id: s_Pedido_Create, session=Depends(async_
     )
 
 
-
-
+    lista_pedido_itens = []
+    vt: list[Decimal] = []
 
     try:
         session.add(pedido)
         await session.flush()
 
-
-
         for item in carrinho_itens:
             for produto in objeto_produto:
                 if item.produto_id == produto.id:
-                    sub_total = item.quantidade * produto.preco_unitario
+                    sub_total = item.quantidade * produto.preco
                     vt.append(sub_total)
 
                     pedido_itens = PedidoItens(
-                
                         pedido_id=pedido.id,
                         produto_id=produto.id,
                         nome_produto=produto.nome,
-                        preco_unitario=produto.preco_unitario,
+                        preco_unitario=produto.preco,
                         quantidade=item.quantidade
-
-
                     )
+
+                    pedidos_itens_l = s_Pedido_Out(
+                            id_produto=produto.id,
+                            nome=produto.nome,
+                            quantidade=item.quantidade,
+                            sub_total=sub_total)
+
+                    lista_pedido_itens.append(pedidos_itens_l)  
                     session.add(pedido_itens)
-                    
         
-        await session.commit()
-    
-    except IntegrityError:
-        await session.rollback()
-        raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail="Erro ao criar o pedido. Verifique os dados fornecidos.",
+        pedido_historico = PedidoStatusHistorico(
+            pedido_id=pedido.id,
+            status=Status_Pedidos.PENDENTE,
+            alterado_por=pedido.usuario_id,
+        )
+
+        pedido_response = s_pedido_response(
+            id_pedido=pedido.id,
+            empresa_id=pedido.empresa_id,
+            filial_id=pedido.filial_id,
+            usuario_id=pedido.usuario_id,
+            status=pedido.status,
+            created_at=pedido.created_at,
+            valor_total=sum(vt, Decimal(0)),
+            itens=lista_pedido_itens
         )
 
 
+        session.add(pedido_historico)
+
+
+        for item in carrinho_itens:
+            await session.delete(item)
+
+        await session.commit()
+
+    except IntegrityError as e:
+
+        await session.rollback()
+        raise HTTPException(HTTPStatus.INTERNAL_SERVER_ERROR,
+                             detail=f"Erro ao criar o pedido: {str(e)}")
+
+
+ ### montar o pedido aqui pra API
+
+    return pedido_response
