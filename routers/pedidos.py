@@ -169,12 +169,21 @@ async def ler_pedido(id_pedido: int, session=Depends(async_get_session)):
 
     pedido_itens_all = pedidos_itens_scalar_result.all()
     for item in pedido_itens_all:
-        pedido_itens_lista.append(item)
+
+        item_out = s_Pedido_Out(
+            id_produto=item.produto_id,
+            nome=item.nome_produto,
+            quantidade=item.quantidade,
+            sub_total=item.preco_unitario * item.quantidade
+        )
+
+        pedido_itens_lista.append(item_out)
         sub_totais.append(item.preco_unitario * item.quantidade)
 
     
 
     pedido_response = s_pedido_response(
+
             id_pedido=pedido.id,
             empresa_id=pedido.empresa_id,
             filial_id=pedido.filial_id,
@@ -186,3 +195,19 @@ async def ler_pedido(id_pedido: int, session=Depends(async_get_session)):
     )        
 
     return pedido_response
+
+
+@router.patch('/{id_pedido}/status', status_code=HTTPStatus.OK):
+def atualizar_status_pedido(id_pedido: int, status_update: s_Pedido_Update_create_status, session=Depends(async_get_session)):
+
+    pedido = session.scalar(select(Pedidos).where(Pedidos.id == id_pedido))
+
+    if pedido is None:
+        raise HTTPException(
+            HTTPStatus.NOT_FOUND,
+            detail='Pedido inexistente'
+        )
+
+    
+    
+    return {"message": "Status do pedido atualizado com sucesso."}

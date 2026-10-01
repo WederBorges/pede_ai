@@ -8,3 +8,4 @@ class Status_Pedidos(str, Enum):
     ENVIADO = "ENVIADO"
     ENTREGUE = "ENTREGUE"
     CANCELADO = "CANCELADO"
+

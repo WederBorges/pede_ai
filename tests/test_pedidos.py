@@ -1,5 +1,3 @@
-from email.policy import HTTP
-
 import pytest
 from models.pedidos import Pedidos
 
@@ -73,12 +71,17 @@ async def test_ler_pedido_inexistente(client, carrinho_com_item_teste):
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 @pytest.mark.asyncio
-async def test_ler_um_pedido(client, carrinho_com_item_teste):
+async def test_ler_um_pedido(client, carrinho_com_item_teste, async_session):
 
     carrinho = carrinho_com_item_teste
     
     response = client.post('/pedido/', json={'carrinho_id': carrinho.carrinho_id})
 
-    response2 = client.get('/pedido/1')
+    response2 = client.get(f'/pedido/{response.json()["id_pedido"]}')
 
-    print(response2.json())
+    response_bd = await async_session.scalar(
+        select(Pedidos).where(Pedidos.id == response.json()['id_pedido']))
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response2.status_code == HTTPStatus.OK
+    assert response2.json()['id_pedido'] == response_bd.id
