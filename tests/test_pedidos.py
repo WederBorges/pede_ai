@@ -1,5 +1,6 @@
 import pytest
-from models.pedidos import Pedidos
+from models.pedidos import Pedidos, PedidoStatusHistorico
+from models.enums_pedido import Status_Pedidos
 
 from http import HTTPStatus
 
@@ -86,6 +87,7 @@ async def test_ler_um_pedido(client, carrinho_com_item_teste, async_session):
     assert response2.status_code == HTTPStatus.OK
     assert response2.json()['id_pedido'] == response_bd.id
 
+
 @pytest.mark.asyncio
 async def test_atualizar_status_pedido_APROVADO(client, async_session, carrinho_com_item_teste):
 
@@ -97,7 +99,7 @@ async def test_atualizar_status_pedido_APROVADO(client, async_session, carrinho_
     
     # Atualiza o status do pedido para "APROVADO"
     response_update = client.patch(f'/pedido/{pedido_id}/status', json={'status': 'APROVADO'})
-    print(response_update.json())
+    
     print(response_update.status_code)
     pedido_bd = await async_session.scalar(
         select(Pedidos).where(Pedidos.id == pedido_id)
@@ -119,11 +121,97 @@ async def test_atualizar_status_pedido_ETAPA_A_FRENTE(client, async_session, car
     
     # Atualiza o status do pedido para "EM_SEPARACAO"
     response_update = client.patch(f'/pedido/{pedido_id}/status', json={'status': 'EM_SEPARACAO'})
-    print(response_update.json())
-    print(response_update.status_code)
+
     pedido_bd = await async_session.scalar(
         select(Pedidos).where(Pedidos.id == pedido_id)
     )
 
     assert response.status_code == HTTPStatus.CREATED
     assert response_update.status_code == HTTPStatus.CONFLICT
+    assert pedido_bd.status.value == 'PENDENTE'
+
+
+
+@pytest.mark.asyncio
+async def test_atualizar_pedido_inexistente(client, async_session):
+
+    response_update = client.patch(f'/pedido/{999999}/status', json={'status': 'APROVADO'})
+
+    assert response_update.status_code == HTTPStatus.NOT_FOUND
+    assert response_update.json()['detail'] == 'Pedido inexistente'
+
+
+@pytest.mark.asyncio
+async def test_historico_gravado(client, async_session, carrinho_com_item_teste):
+    
+    carrinho = carrinho_com_item_teste
+
+    response = client.post('/pedido/', json={'carrinho_id': carrinho.carrinho_id})
+
+    pedido_id = response.json()['id_pedido']
+    
+    # Atualiza o status do pedido para "APROVADO"
+    response_update = client.patch(f'/pedido/{pedido_id}/status', json={'status': 'APROVADO'})
+    
+    pedido_bd = await async_session.scalar(
+        select(Pedidos).where(Pedidos.id == pedido_id)
+    )
+
+
+    # Verifica se o histórico foi gravado corretamente
+    historico = await async_session.scalars(
+            select(PedidoStatusHistorico)
+            .where(PedidoStatusHistorico.pedido_id == pedido_id)
+            .order_by(PedidoStatusHistorico.id)
+    )
+
+    statuses = [h.status for h in historico.all()]
+
+    assert historico is not None
+    assert response.status_code == HTTPStatus.CREATED
+    assert response_update.status_code == HTTPStatus.OK
+    assert statuses == [Status_Pedidos.PENDENTE, Status_Pedidos.APROVADO]
+
+
+@pytest.mark.asyncio
+async def test_atualizar_pedido_cancelado(client, async_session, carrinho_com_item_teste):
+
+    carrinho = carrinho_com_item_teste
+
+    response = client.post('/pedido/', json={'carrinho_id': carrinho.carrinho_id})
+
+    pedido_id = response.json()['id_pedido']
+    
+    # Atualiza o status do pedido para "CANCELADO"
+    response_update = client.patch(f'/pedido/{pedido_id}/status', json={'status': 'CANCELADO'})
+    
+    pedido_bd = await async_session.scalar(
+        select(Pedidos).where(Pedidos.id == pedido_id)
+    )
+
+
+
+    
+    # Atualiza pedido cancelado para aprovado
+    response_update_teste_conflito = client.patch(f'/pedido/{pedido_id}/status', json={'status': 'APROVADO'})
+
+
+    historico = await async_session.scalars(
+                select(PedidoStatusHistorico)
+                .where(PedidoStatusHistorico.pedido_id == pedido_id)
+                .order_by(PedidoStatusHistorico.id)
+        )
+    statuses = [h.status for h in historico.all()]
+
+
+    esperado = (
+        f'Pedido {pedido_bd.id} está {pedido_bd.status.value}, '
+        'que é um estado final e não aceita novas mudanças.'
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response_update.status_code == HTTPStatus.OK
+    assert response_update_teste_conflito.status_code == HTTPStatus.CONFLICT
+    assert pedido_bd.status.value == 'CANCELADO'
+    assert statuses == [Status_Pedidos.PENDENTE, Status_Pedidos.CANCELADO]
+    assert response_update_teste_conflito.json()['detail'] == esperado

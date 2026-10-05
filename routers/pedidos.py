@@ -215,12 +215,17 @@ async def atualizar_status_pedido(
     permitidos = TRANSICOES_VALIDAS.get(status_atual, [])
 
     if status_update.status not in permitidos:
-        raise HTTPException(
-            HTTPStatus.CONFLICT,
-            detail=f"""
-            Não é possível atualizar o status do pedido {id_pedido} a partir do status atual {status_atual.value}.
-            Opções: {', '.join(permitidos)}"""
-        )
+        if permitidos:
+            detail = (
+                f'Pedido {id_pedido} está {status_atual.value}. '
+                f'Opções: {", ".join(permitidos)}'
+            )
+        else:
+            detail = (
+                f'Pedido {id_pedido} está {status_atual.value}, '
+                f'que é um estado final e não aceita novas mudanças.'
+            )
+        raise HTTPException(HTTPStatus.CONFLICT, detail=detail)
 
     try:
         session.add(PedidoStatusHistorico(
@@ -240,3 +245,4 @@ async def atualizar_status_pedido(
                              detail="Erro ao atualizar o status do pedido. Verifique os dados fornecidos.")
 
     return {"message": "Status do pedido atualizado com sucesso."}
+
