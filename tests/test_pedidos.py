@@ -85,3 +85,45 @@ async def test_ler_um_pedido(client, carrinho_com_item_teste, async_session):
     assert response.status_code == HTTPStatus.CREATED
     assert response2.status_code == HTTPStatus.OK
     assert response2.json()['id_pedido'] == response_bd.id
+
+@pytest.mark.asyncio
+async def test_atualizar_status_pedido_APROVADO(client, async_session, carrinho_com_item_teste):
+
+    carrinho = carrinho_com_item_teste
+
+    response = client.post('/pedido/', json={'carrinho_id': carrinho.carrinho_id})
+
+    pedido_id = response.json()['id_pedido']
+    
+    # Atualiza o status do pedido para "APROVADO"
+    response_update = client.patch(f'/pedido/{pedido_id}/status', json={'status': 'APROVADO'})
+    print(response_update.json())
+    print(response_update.status_code)
+    pedido_bd = await async_session.scalar(
+        select(Pedidos).where(Pedidos.id == pedido_id)
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response_update.status_code == HTTPStatus.OK
+    assert pedido_bd.status.value == 'APROVADO'
+
+
+@pytest.mark.asyncio
+async def test_atualizar_status_pedido_ETAPA_A_FRENTE(client, async_session, carrinho_com_item_teste):
+
+    carrinho = carrinho_com_item_teste
+
+    response = client.post('/pedido/', json={'carrinho_id': carrinho.carrinho_id})
+
+    pedido_id = response.json()['id_pedido']
+    
+    # Atualiza o status do pedido para "EM_SEPARACAO"
+    response_update = client.patch(f'/pedido/{pedido_id}/status', json={'status': 'EM_SEPARACAO'})
+    print(response_update.json())
+    print(response_update.status_code)
+    pedido_bd = await async_session.scalar(
+        select(Pedidos).where(Pedidos.id == pedido_id)
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response_update.status_code == HTTPStatus.CONFLICT

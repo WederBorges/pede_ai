@@ -9,3 +9,12 @@ class Status_Pedidos(str, Enum):
     ENTREGUE = "ENTREGUE"
     CANCELADO = "CANCELADO"
 
+TRANSICOES_VALIDAS = { #MAQUINA DE ESTADOS
+
+        Status_Pedidos.PENDENTE: [Status_Pedidos.APROVADO, Status_Pedidos.CANCELADO],
+        Status_Pedidos.APROVADO: [Status_Pedidos.EM_SEPARACAO, Status_Pedidos.CANCELADO],
+        Status_Pedidos.EM_SEPARACAO: [Status_Pedidos.ENVIADO, Status_Pedidos.CANCELADO],
+        Status_Pedidos.ENVIADO: [Status_Pedidos.ENTREGUE, Status_Pedidos.CANCELADO],
+        Status_Pedidos.ENTREGUE: [],
+        Status_Pedidos.CANCELADO: []
+    }

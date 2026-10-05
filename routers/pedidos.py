@@ -1,6 +1,5 @@
 from decimal import Decimal
 from http import HTTPStatus
-from re import sub
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -19,6 +18,7 @@ from schemas.schema_pedidos import (
     s_Pedido_Update_create_status,
     s_Pedido_Update_create_preventrega,
 )
+from models.enums_pedido import TRANSICOES_VALIDAS
 
 
 router = APIRouter(prefix='/pedido', tags=['Pedido'])
@@ -197,17 +197,46 @@ async def ler_pedido(id_pedido: int, session=Depends(async_get_session)):
     return pedido_response
 
 
-@router.patch('/{id_pedido}/status', status_code=HTTPStatus.OK):
-def atualizar_status_pedido(id_pedido: int, status_update: s_Pedido_Update_create_status, session=Depends(async_get_session)):
+@router.patch('/{id_pedido}/status', status_code=HTTPStatus.OK)
+async def atualizar_status_pedido(
+    id_pedido: int, 
+    status_update: s_Pedido_Update_create_status,
+    session=Depends(async_get_session)):
 
-    pedido = session.scalar(select(Pedidos).where(Pedidos.id == id_pedido))
+    pedido = await session.scalar(select(Pedidos).where(Pedidos.id == id_pedido))
 
     if pedido is None:
         raise HTTPException(
             HTTPStatus.NOT_FOUND,
             detail='Pedido inexistente'
         )
+    
+    status_atual = pedido.status
+    permitidos = TRANSICOES_VALIDAS.get(status_atual, [])
 
-    
-    
+    if status_update.status not in permitidos:
+        raise HTTPException(
+            HTTPStatus.CONFLICT,
+            detail=f"""
+            Não é possível atualizar o status do pedido {id_pedido} a partir do status atual {status_atual.value}.
+            Opções: {', '.join(permitidos)}"""
+        )
+
+    try:
+        session.add(PedidoStatusHistorico(
+            pedido_id=pedido.id,
+            status=status_update.status,
+            alterado_por=pedido.usuario_id
+        ))
+
+        pedido.status = status_update.status
+
+        await session.commit()
+        await session.refresh(pedido)
+
+    except IntegrityError as e:
+        await session.rollback()
+        raise HTTPException(HTTPStatus.INTERNAL_SERVER_ERROR,
+                             detail="Erro ao atualizar o status do pedido. Verifique os dados fornecidos.")
+
     return {"message": "Status do pedido atualizado com sucesso."}
