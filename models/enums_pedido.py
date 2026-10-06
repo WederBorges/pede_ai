@@ -18,3 +18,7 @@ TRANSICOES_VALIDAS = { #MAQUINA DE ESTADOS
         Status_Pedidos.ENTREGUE: [],
         Status_Pedidos.CANCELADO: []
     }
+
+
+
+PREVISOES_ENTREGAS_VALIDAS = ["APROVADO", "EM_SEPARACAO", "ENVIADO",]

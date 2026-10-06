@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from models.pedidos import Pedidos, PedidoStatusHistorico
 from models.enums_pedido import Status_Pedidos
@@ -215,3 +217,18 @@ async def test_atualizar_pedido_cancelado(client, async_session, carrinho_com_it
     assert pedido_bd.status.value == 'CANCELADO'
     assert statuses == [Status_Pedidos.PENDENTE, Status_Pedidos.CANCELADO]
     assert response_update_teste_conflito.json()['detail'] == esperado
+
+@pytest.mark.asyncio
+async def teste_criar_previsao_entrega(client, async_session, carrinho_com_item_teste):
+
+    carrinho = carrinho_com_item_teste
+    pedido_response = client.post(f'/pedido', json={'carrinho_id': carrinho.id})
+
+    id_pedido = pedido_response.json()['id_pedido']
+    pedido_aprovado = client.patch(f'/pedido/{id_pedido}/status', json={'status': 'APROVADO'})
+
+    previsao_entrega = client.patch(f'pedido/{id_pedido}/previsao-entrega', json={'previsao_entrega': '01/12/2026'})
+
+    print(pedido_response.json())
+    print(id_pedido, "ID PEDIDO")
+    print(pedido_aprovado.json())

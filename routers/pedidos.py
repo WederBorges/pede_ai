@@ -18,8 +18,8 @@ from schemas.schema_pedidos import (
     s_Pedido_Update_create_status,
     s_Pedido_Update_create_preventrega,
 )
-from models.enums_pedido import TRANSICOES_VALIDAS
-
+from models.enums_pedido import TRANSICOES_VALIDAS, PREVISOES_ENTREGAS_VALIDAS
+from schemas.schema_pedidos import s_Pedido_Update_create_preventrega
 
 router = APIRouter(prefix='/pedido', tags=['Pedido'])
 
@@ -245,4 +245,15 @@ async def atualizar_status_pedido(
                              detail="Erro ao atualizar o status do pedido. Verifique os dados fornecidos.")
 
     return {"message": "Status do pedido atualizado com sucesso."}
+
+
+@router.patch('/{id_pedido}/previsao-entrega', status_code=HTTPStatus.OK, response_model=s_pedido_response)
+async def gerar_previsao_entrega(
+    id_pedido: int, 
+    previsao_entrega:s_Pedido_Update_create_preventrega, 
+    session=Depends(async_get_session)):
+
+
+
+    pass
 
