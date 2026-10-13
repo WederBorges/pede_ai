@@ -37,5 +37,6 @@ class s_pedido_response(BaseModel):
     usuario_id:int
     status:Status_Pedidos
     created_at: datetime
+    previsao_entrega: date | None
     valor_total:Annotated[Decimal, Field(max_digits=10, decimal_places=2)]
     itens: list[s_Pedido_Out]

@@ -20,7 +20,7 @@ from schemas.schema_pedidos import (
 )
 from models.enums_pedido import TRANSICOES_VALIDAS, PREVISOES_ENTREGAS_VALIDAS
 from schemas.schema_pedidos import s_Pedido_Update_create_preventrega
-
+import datetime
 router = APIRouter(prefix='/pedido', tags=['Pedido'])
 
 @router.post('/', response_model=s_pedido_response, status_code=HTTPStatus.CREATED)
@@ -127,6 +127,7 @@ async def criar_pedido(dado_carrinho_id: s_Pedido_Create, session=Depends(async_
             usuario_id=pedido.usuario_id,
             status=pedido.status,
             created_at=pedido.created_at,
+            previsao_entrega=None,
             valor_total=sum(vt, Decimal(0)),
             itens=lista_pedido_itens
         ) ## devolve no swagger
@@ -190,6 +191,7 @@ async def ler_pedido(id_pedido: int, session=Depends(async_get_session)):
             usuario_id=pedido.usuario_id,
             status=pedido.status,
             created_at=pedido.created_at,
+            previsao_entrega=pedido.previsao_entrega,
             valor_total=sum(sub_totais, Decimal(0)),
             itens=pedido_itens_lista
     )        
@@ -253,7 +255,57 @@ async def gerar_previsao_entrega(
     previsao_entrega:s_Pedido_Update_create_preventrega, 
     session=Depends(async_get_session)):
 
+    sub_totais = []
+    pedido_itens_lista = []
+
+    pedido = await session.scalar(
+        select(Pedidos)
+        .where(Pedidos.id == id_pedido)
+    )
+
+    if pedido:  
+        if previsao_entrega.previsao_entrega < datetime.date.today():
+            raise HTTPException(
+                HTTPStatus.CONFLICT,
+                detail='Data de previsão menor que data atual'
+            )
+        pedido.previsao_entrega =  previsao_entrega.previsao_entrega
+    
+
+    await session.commit()
+
+    pedido_itens = await session.scalars(
+        select(PedidoItens)
+        .where(PedidoItens.pedido_id == pedido.id)
+    )
+
+    for item in pedido_itens.all():
+
+        sub_totais.append(item.preco_unitario * item.quantidade)
+
+        produto_itens = s_Pedido_Out(
+            id_produto=item.produto_id,
+            nome=item.nome_produto,
+            quantidade=item.quantidade,
+            sub_total=item.preco_unitario * item.quantidade
+        )
+
+        pedido_itens_lista.append(produto_itens)
 
 
-    pass
+    view_api = s_pedido_response(
+
+            id_pedido=pedido.id,
+            empresa_id=pedido.empresa_id,
+            filial_id=pedido.filial_id,
+            usuario_id=pedido.usuario_id,
+            status=pedido.status,
+            created_at=pedido.created_at,
+            previsao_entrega=pedido.previsao_entrega,
+            valor_total=sum(sub_totais, Decimal(0)),
+            itens=pedido_itens_lista
+    )        
+    
+    
+    return view_api
 

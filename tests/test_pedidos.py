@@ -1,12 +1,14 @@
-import json
 
 import pytest
 from models.pedidos import Pedidos, PedidoStatusHistorico
-from models.enums_pedido import Status_Pedidos
+from models.enums_pedido import PREVISOES_ENTREGAS_VALIDAS, Status_Pedidos
 
 from http import HTTPStatus
 
 from sqlalchemy import select
+
+from datetime import date, timedelta
+
 
 @pytest.mark.asyncio
 async def test_create_pedido(client, async_session, carrinho_com_item_teste):
@@ -219,7 +221,7 @@ async def test_atualizar_pedido_cancelado(client, async_session, carrinho_com_it
     assert response_update_teste_conflito.json()['detail'] == esperado
 
 @pytest.mark.asyncio
-async def teste_criar_previsao_entrega(client, async_session, carrinho_com_item_teste):
+async def test_criar_previsao_entrega(client, async_session, carrinho_com_item_teste):
 
     carrinho = carrinho_com_item_teste
     pedido_response = client.post(f'/pedido', json={'carrinho_id': carrinho.id})
@@ -227,8 +229,11 @@ async def teste_criar_previsao_entrega(client, async_session, carrinho_com_item_
     id_pedido = pedido_response.json()['id_pedido']
     pedido_aprovado = client.patch(f'/pedido/{id_pedido}/status', json={'status': 'APROVADO'})
 
-    previsao_entrega = client.patch(f'pedido/{id_pedido}/previsao-entrega', json={'previsao_entrega': '01/12/2026'})
+    previsao_entrega = client.patch(
+        f'pedido/{id_pedido}/previsao-entrega',
+        json={'previsao_entrega': f'{date.today() + timedelta(days=7)}'})
 
     print(pedido_response.json())
     print(id_pedido, "ID PEDIDO")
     print(pedido_aprovado.json())
+    print(previsao_entrega.json())
