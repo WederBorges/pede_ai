@@ -17,5 +17,10 @@
     "editor.tabCompletion": "on",
     "editor.wordBasedSuggestions": "matchingDocuments"
   },
-  "remote.autoForwardPortsFallback": 0
+  "remote.autoForwardPortsFallback": 0,
+  "python.testing.pytestArgs": [
+    "tests"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
 }

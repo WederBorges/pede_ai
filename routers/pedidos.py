@@ -1,6 +1,5 @@
 from decimal import Decimal
 from http import HTTPStatus
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -18,7 +17,7 @@ from schemas.schema_pedidos import (
     s_Pedido_Update_create_status,
     s_Pedido_Update_create_preventrega,
 )
-from models.enums_pedido import TRANSICOES_VALIDAS, PREVISOES_ENTREGAS_VALIDAS
+from models.enums_pedido import PREVISOES_ENTREGAS_VALIDAS, TRANSICOES_VALIDAS
 from schemas.schema_pedidos import s_Pedido_Update_create_preventrega
 import datetime
 router = APIRouter(prefix='/pedido', tags=['Pedido'])
@@ -262,6 +261,23 @@ async def gerar_previsao_entrega(
         select(Pedidos)
         .where(Pedidos.id == id_pedido)
     )
+
+    if pedido.status not in PREVISOES_ENTREGAS_VALIDAS:
+        permitidos = TRANSICOES_VALIDAS.get(pedido.status, [])
+
+        if pedido.status not in permitidos:
+            if permitidos:
+                detail = (
+                    f'Pedido {id_pedido} está {pedido.status.value}. '
+                    f'Opções: {", ".join(permitidos)}'
+                )
+            else:
+                detail = (
+                    f'Pedido {id_pedido} está {pedido.status.value}, '
+                    f'que é um estado final e não aceita novas mudanças.'
+                )
+            raise HTTPException(HTTPStatus.CONFLICT, detail=detail)
+
 
     if pedido:  
         if previsao_entrega.previsao_entrega < datetime.date.today():

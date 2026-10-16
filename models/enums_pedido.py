@@ -1,5 +1,5 @@
 from enum import Enum
-
+from http import HTTPStatus
 
 class Status_Pedidos(str, Enum):
     PENDENTE = "PENDENTE"
@@ -19,6 +19,4 @@ TRANSICOES_VALIDAS = { #MAQUINA DE ESTADOS
         Status_Pedidos.CANCELADO: []
     }
 
-
-
-PREVISOES_ENTREGAS_VALIDAS = ["APROVADO", "EM_SEPARACAO", "ENVIADO",]
+PREVISOES_ENTREGAS_VALIDAS = ["APROVADO", "EM_SEPARACAO", "ENVIADO"]

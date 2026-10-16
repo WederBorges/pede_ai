@@ -1,7 +1,7 @@
 
 import pytest
-from models.pedidos import Pedidos, PedidoStatusHistorico
-from models.enums_pedido import PREVISOES_ENTREGAS_VALIDAS, Status_Pedidos
+from models.pedidos import Pedidos, PedidoStatusHistorico, PedidoItens
+from models.enums_pedido import Status_Pedidos
 
 from http import HTTPStatus
 
@@ -9,6 +9,9 @@ from sqlalchemy import select
 
 from datetime import date, timedelta
 
+from schemas.schema_pedidos import s_Pedido_Out, s_pedido_response
+
+from decimal import Decimal
 
 @pytest.mark.asyncio
 async def test_create_pedido(client, async_session, carrinho_com_item_teste):
@@ -220,20 +223,41 @@ async def test_atualizar_pedido_cancelado(client, async_session, carrinho_com_it
     assert statuses == [Status_Pedidos.PENDENTE, Status_Pedidos.CANCELADO]
     assert response_update_teste_conflito.json()['detail'] == esperado
 
+
+@pytest.mark.parametrize(
+        "pedido_teste_previsao, http_esperado",
+    [
+            (Status_Pedidos.PENDENTE.value, HTTPStatus.CONFLICT),
+            (Status_Pedidos.APROVADO.value, HTTPStatus.OK),
+            (Status_Pedidos.EM_SEPARACAO.value, HTTPStatus.OK),
+            (Status_Pedidos.ENVIADO.value, HTTPStatus.OK),
+            (Status_Pedidos.ENTREGUE.value, HTTPStatus.CONFLICT),
+            (Status_Pedidos.CANCELADO.value, HTTPStatus.CONFLICT)
+    ],
+        indirect=["pedido_teste_previsao"],
+)
+
+
 @pytest.mark.asyncio
-async def test_criar_previsao_entrega(client, async_session, carrinho_com_item_teste):
+async def test_criar_previsao_entrega(client, async_session, pedido_teste_previsao, http_esperado):
 
-    carrinho = carrinho_com_item_teste
-    pedido_response = client.post(f'/pedido', json={'carrinho_id': carrinho.id})
-
-    id_pedido = pedido_response.json()['id_pedido']
-    pedido_aprovado = client.patch(f'/pedido/{id_pedido}/status', json={'status': 'APROVADO'})
+    data_futura = date.today() + timedelta(days=7)
 
     previsao_entrega = client.patch(
-        f'pedido/{id_pedido}/previsao-entrega',
-        json={'previsao_entrega': f'{date.today() + timedelta(days=7)}'})
+        f'pedido/{pedido_teste_previsao.id}/previsao-entrega',
+        json={'previsao_entrega': f'{data_futura}'})
 
-    print(pedido_response.json())
-    print(id_pedido, "ID PEDIDO")
-    print(pedido_aprovado.json())
-    print(previsao_entrega.json())
+    pedido_bd = await async_session.scalar(
+        select(Pedidos)
+        .where(Pedidos.id == pedido_teste_previsao.id)
+    
+    )
+    print(pedido_bd is pedido_teste_previsao)
+    if pedido_bd.previsao_entrega:
+        
+        assert data_futura == pedido_bd.previsao_entrega
+        assert data_futura.isoformat() == previsao_entrega.json()['previsao_entrega']
+    assert previsao_entrega.status_code == http_esperado
+    assert pedido_bd.status == pedido_teste_previsao.status
+
+##### ajustar teste de espelho comparando o msm objeto .status com ele mesmo ####
