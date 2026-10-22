@@ -29,7 +29,9 @@ async def test_create_produto(client, async_session, categoria_teste):
 
 
 @pytest.mark.asyncio
-async def test_create_produto_CATEGORIA_INEXISTENTE(client, async_session, categoria_teste):
+async def test_create_produto_CATEGORIA_INEXISTENTE(
+    client, async_session, categoria_teste
+):
 
     dados = {
         'categoria_id': categoria_teste.id + 9999,
@@ -114,14 +116,14 @@ async def test_delete_produto(client, categoria_teste, produto_teste, async_sess
 
 
 @pytest.mark.asyncio
-async def test_delete_produto_inexistente(client, categoria_teste, produto_teste, async_session):
+async def test_delete_produto_inexistente(
+    client, categoria_teste, produto_teste, async_session
+):
 
     response = client.delete(f'/produtos/{produto_teste.id + 1}')
 
-
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {'detail': 'Produto inexistente'}
-
 
 
 @pytest.mark.asyncio
@@ -146,7 +148,9 @@ async def test_atualizar_produto(client, categoria_teste, produto_teste, async_s
 
 
 @pytest.mark.asyncio
-async def test_atualizar_produto_inexistente(client, categoria_teste, produto_teste, async_session):
+async def test_atualizar_produto_inexistente(
+    client, categoria_teste, produto_teste, async_session
+):
 
     dados = {
         'nome': 'teste',
@@ -157,7 +161,6 @@ async def test_atualizar_produto_inexistente(client, categoria_teste, produto_te
     response = client.patch(f'/produtos/{produto_teste.id + 1}', json=dados)
 
     assert response.status_code == HTTPStatus.NOT_FOUND
-
 
 
 @pytest.mark.asyncio

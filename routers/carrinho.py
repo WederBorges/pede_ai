@@ -21,9 +21,7 @@ router = APIRouter(prefix='/carrinho', tags=['Carrinho'])
 
 
 @router.get('/{id_carrinho}', response_model=s_Create_carrinho_out)
-async def ler_carrinho(
-    id_carrinho: int, session=Depends(async_get_session)
-):
+async def ler_carrinho(id_carrinho: int, session=Depends(async_get_session)):
 
     carrinho = await session.scalar(select(Carrinho).where(Carrinho.id == id_carrinho))
 
@@ -196,7 +194,9 @@ async def atualizar_quantidade_produto_carrinho(
 ):
 
     carrinho = await session.scalar(select(Carrinho).where(Carrinho.id == id_carrinho))
-    produto = await session.scalar(select(Produtos).where(Produtos.id == produto_entrada.produto_id))
+    produto = await session.scalar(
+        select(Produtos).where(Produtos.id == produto_entrada.produto_id)
+    )
 
     if carrinho is None:
         raise HTTPException(HTTPStatus.NOT_FOUND, detail='Carrinho inexistente')

@@ -1,4 +1,3 @@
-
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -94,45 +93,38 @@ async def atualizar_produto(
 
     produto = await session.scalar(select(Produtos).where(Produtos.id == id_produto))
 
-    #valida se produto existe
+    # valida se produto existe
     if produto is None:
-        raise HTTPException(
-            HTTPStatus.NOT_FOUND, 
-            detail='Produto inexistente')
+        raise HTTPException(HTTPStatus.NOT_FOUND, detail='Produto inexistente')
 
     db_produto = dados.model_dump(exclude_unset=True)
 
-    #verifica se o nome 
+    # verifica se o nome
     if 'nome' in db_produto:
         novo_nome = db_produto['nome']
 
         if novo_nome != produto.nome:
-            produto_existente = await session.scalar(select(Produtos).where(
-                    Produtos.nome == novo_nome,
-                    Produtos.id != id_produto
+            produto_existente = await session.scalar(
+                select(Produtos).where(
+                    Produtos.nome == novo_nome, Produtos.id != id_produto
+                )
             )
-        )
 
         if produto_existente is not None:
-            raise HTTPException(
-                HTTPStatus.CONFLICT,
-                detail='Produto já cadastrado')
-                        
+            raise HTTPException(HTTPStatus.CONFLICT, detail='Produto já cadastrado')
+
     if 'categoria' in db_produto:
         nova_categoria = db_produto['categoria']
 
         if nova_categoria != produto.categoria:
-            categoria_existente = await session.scalar(select(Produtos).where(
+            categoria_existente = await session.scalar(
+                select(Produtos).where(
                     Produtos.categoria_id != db_produto['categoria_id']
+                )
             )
-        )
 
         if categoria_existente is None:
-            raise HTTPException(
-                HTTPStatus.CONFLICT,
-                detail='Categoria inexistente')
-                        
-
+            raise HTTPException(HTTPStatus.CONFLICT, detail='Categoria inexistente')
 
     for key, value in db_produto.items():
         setattr(produto, key, value)

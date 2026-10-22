@@ -125,7 +125,7 @@ async def test_atualizar_categoria_duplicada(client, categoria_teste, async_sess
         'ativo': True,
     }
 
-    response_segunda = client.post('/categorias', json=dados_segunda_categoria)
+    client.post('/categorias', json=dados_segunda_categoria)
 
     await async_session.refresh(categoria_teste)
 

@@ -7,9 +7,9 @@ from routers import (
     categorias,
     empresas,
     filiais,
+    pedidos,
     produtos,
     usuarios,
-    pedidos
 )
 
 app = FastAPI()

@@ -1,22 +1,22 @@
 from enum import Enum
-from http import HTTPStatus
+
 
 class Status_Pedidos(str, Enum):
-    PENDENTE = "PENDENTE"
-    APROVADO = "APROVADO"
-    EM_SEPARACAO = "EM_SEPARACAO"
-    ENVIADO = "ENVIADO"
-    ENTREGUE = "ENTREGUE"
-    CANCELADO = "CANCELADO"
+    PENDENTE = 'PENDENTE'
+    APROVADO = 'APROVADO'
+    EM_SEPARACAO = 'EM_SEPARACAO'
+    ENVIADO = 'ENVIADO'
+    ENTREGUE = 'ENTREGUE'
+    CANCELADO = 'CANCELADO'
 
-TRANSICOES_VALIDAS = { #MAQUINA DE ESTADOS
 
-        Status_Pedidos.PENDENTE: [Status_Pedidos.APROVADO, Status_Pedidos.CANCELADO],
-        Status_Pedidos.APROVADO: [Status_Pedidos.EM_SEPARACAO, Status_Pedidos.CANCELADO],
-        Status_Pedidos.EM_SEPARACAO: [Status_Pedidos.ENVIADO, Status_Pedidos.CANCELADO],
-        Status_Pedidos.ENVIADO: [Status_Pedidos.ENTREGUE],
-        Status_Pedidos.ENTREGUE: [],
-        Status_Pedidos.CANCELADO: []
-    }
+TRANSICOES_VALIDAS = {  # MAQUINA DE ESTADOS
+    Status_Pedidos.PENDENTE: [Status_Pedidos.APROVADO, Status_Pedidos.CANCELADO],
+    Status_Pedidos.APROVADO: [Status_Pedidos.EM_SEPARACAO, Status_Pedidos.CANCELADO],
+    Status_Pedidos.EM_SEPARACAO: [Status_Pedidos.ENVIADO, Status_Pedidos.CANCELADO],
+    Status_Pedidos.ENVIADO: [Status_Pedidos.ENTREGUE],
+    Status_Pedidos.ENTREGUE: [],
+    Status_Pedidos.CANCELADO: [],
+}
 
-PREVISOES_ENTREGAS_VALIDAS = ["APROVADO", "EM_SEPARACAO", "ENVIADO"]
+PREVISOES_ENTREGAS_VALIDAS = ['APROVADO', 'EM_SEPARACAO', 'ENVIADO']

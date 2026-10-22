@@ -1,9 +1,7 @@
 import os
-from http import HTTPStatus
-from models import carrinho
-from models.enums_pedido import Status_Pedidos
-import pytest
+
 from sqlalchemy import select
+
 os.environ.setdefault(
     'DATABASE_URL',
     'sqlite+aiosqlite:///:memory:',
@@ -217,7 +215,6 @@ async def carrinho_com_item_teste(carrinho_teste, produto_teste, async_session):
     async_session.add(carrinho_com_item_teste)
     await async_session.commit()
     await async_session.refresh(carrinho_com_item_teste)
-    
 
     return carrinho_com_item_teste
 
@@ -227,37 +224,34 @@ async def pedido_teste(carrinho_com_item_teste, async_session):
     from models.pedidos import Pedidos
 
     pedido_teste = Pedidos(
-        carrinho_id=carrinho_com_item_teste.carrinho_id,
-        status="PENDENTE"
+        carrinho_id=carrinho_com_item_teste.carrinho_id, status='PENDENTE'
     )
 
     async_session.add(pedido_teste)
     await async_session.commit()
     await async_session.refresh(pedido_teste)
     return pedido_teste
-
-
-
 
 
 @pytest_asyncio.fixture
-async def pedido_teste_previsao(carrinho_com_item_teste, async_session, carrinho_teste,request):
+async def pedido_com_status(
+    carrinho_com_item_teste, async_session, carrinho_teste, request
+):
     from models.pedidos import Pedidos
 
-
-    user = await async_session.scalar(select(User).where(User.id == carrinho_teste.usuario_id))
+    user = await async_session.scalar(
+        select(User).where(User.id == carrinho_teste.usuario_id)
+    )
     empresa_user = user.empresa_id
     pedido_teste = Pedidos(
         carrinho_id=carrinho_teste.id,
-        empresa_id = empresa_user,
-        filial_id= carrinho_teste.filial_id,
+        empresa_id=empresa_user,
+        filial_id=carrinho_teste.filial_id,
         usuario_id=carrinho_teste.usuario_id,
-        status=getattr(request, "param", "PENDENTE")
+        status=getattr(request, 'param', 'PENDENTE'),
     )
 
     async_session.add(pedido_teste)
     await async_session.commit()
     await async_session.refresh(pedido_teste)
     return pedido_teste
-
-

@@ -1,7 +1,5 @@
 from http import HTTPStatus
 
-from anyio import TaskHandle
-
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 
@@ -21,7 +19,7 @@ async def catalogo(
     session=Depends(async_get_session),
 ):
 
-    condicoes = [Produtos.ativo == True]
+    condicoes = [Produtos.ativo]
     if produto is not None:
         condicoes.append(Produtos.nome.ilike(f'%{produto}%'))
     if categoria_id is not None:

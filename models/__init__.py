@@ -1,5 +1,6 @@
 from .carrinho import Carrinho as Carrinho
 from .carrinho import CarrinhoItens as CarrinhoItens
+from .categorias import Categoria as Categoria
 from .empresas_e_filiais import Empresas as Empresas
 from .empresas_e_filiais import Filiais as Filiais
 from .pedidos import PedidoItens as PedidoItens
@@ -7,4 +8,3 @@ from .pedidos import Pedidos as Pedidos
 from .pedidos import PedidoStatusHistorico as PedidoStatusHistorico
 from .produtos import Produtos as Produtos
 from .usuarios import User as User
-from .categorias import Categoria as Categoria

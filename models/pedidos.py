@@ -1,11 +1,23 @@
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum
 
-from sqlalchemy import Enum as SQLALCHEMYENUM,TIMESTAMP, CheckConstraint, func,ForeignKey, Integer, Numeric, String, DATE, null
+from sqlalchemy import (
+    DATE,
+    TIMESTAMP,
+    CheckConstraint,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    func,
+)
+from sqlalchemy import (
+    Enum as SQLALCHEMYENUM,
+)
 from sqlalchemy.orm import Mapped, mapped_column
-from models.enums_pedido import Status_Pedidos
+
 from db.base import Base
+from models.enums_pedido import Status_Pedidos
 
 # ## pedidos
 # id
@@ -22,14 +34,20 @@ class Pedidos(Base):
     __tablename__ = 'pedidos'
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
-    carrinho_id: Mapped[int|None] = mapped_column(ForeignKey('carrinho.id', ondelete='SET NULL'),  nullable=True)
+    carrinho_id: Mapped[int | None] = mapped_column(
+        ForeignKey('carrinho.id', ondelete='SET NULL'), nullable=True
+    )
     empresa_id: Mapped[int] = mapped_column(ForeignKey('empresas.id'), nullable=False)
     filial_id: Mapped[int] = mapped_column(ForeignKey('filiais.id'), nullable=False)
     usuario_id: Mapped[int] = mapped_column(ForeignKey('usuarios.id'), nullable=False)
-    status: Mapped[Status_Pedidos] = mapped_column(SQLALCHEMYENUM(Status_Pedidos), default=Status_Pedidos.PENDENTE, nullable=False)
+    status: Mapped[Status_Pedidos] = mapped_column(
+        SQLALCHEMYENUM(Status_Pedidos), default=Status_Pedidos.PENDENTE, nullable=False
+    )
     previsao_entrega: Mapped[datetime] = mapped_column(DATE, nullable=True)
     entregue_em: Mapped[datetime] = mapped_column(DATE, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=func.now(),nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP, default=func.now(), nullable=False
+    )
 
 
 # ## pedido_itens
@@ -72,7 +90,11 @@ class PedidoStatusHistorico(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
     pedido_id: Mapped[int] = mapped_column(ForeignKey('pedidos.id'), nullable=False)
-    status: Mapped[Status_Pedidos] = mapped_column(SQLALCHEMYENUM(Status_Pedidos), nullable=False)
+    status: Mapped[Status_Pedidos] = mapped_column(
+        SQLALCHEMYENUM(Status_Pedidos), nullable=False
+    )
     observacao: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP, default=func.now(), nullable=False
+    )
     alterado_por: Mapped[int] = mapped_column(ForeignKey('usuarios.id'), nullable=False)
