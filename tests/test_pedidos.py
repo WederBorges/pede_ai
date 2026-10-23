@@ -530,3 +530,22 @@ async def test_troca_status_parametrize(
 
     assert http_esperado == response.status_code
     assert pedido_bd.status == status_esperado
+
+
+@pytest.mark.asyncio
+async def test_historico_pedido_inexistente(client, pedido_com_status):
+
+    #### verificar mudança de estado do pedido#### 
+    # - existente - inexistente
+
+    response = client.get(f'/pedido/{pedido_com_status.id + 999}/historico')
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json()['detail'] == "Pedido inexistente"
+
+@pytest.mark.asyncio
+async def test_historico_pedido(client, pedido_com_status):
+
+    response = client.get(f'pedido/{pedido_com_status.id}/historico')
+    print(response.json())
+
+

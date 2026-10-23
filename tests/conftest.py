@@ -19,6 +19,8 @@ from models.categorias import Categoria
 from models.empresas_e_filiais import Empresas, Filiais
 from models.produtos import Produtos
 from models.usuarios import User
+from models.enums_pedido import Status_Pedidos
+from models.pedidos import PedidoStatusHistorico
 
 
 @pytest_asyncio.fixture
@@ -220,13 +222,20 @@ async def carrinho_com_item_teste(carrinho_teste, produto_teste, async_session):
 
 
 @pytest_asyncio.fixture
-async def pedido_teste(carrinho_com_item_teste, async_session):
+async def pedido_teste(carrinho_com_item_teste, async_session,carrinho_teste):
     from models.pedidos import Pedidos
 
-    pedido_teste = Pedidos(
-        carrinho_id=carrinho_com_item_teste.carrinho_id, status='PENDENTE'
+    user = await async_session.scalar(
+        select(User).where(User.id == carrinho_teste.usuario_id)
     )
-
+    empresa_user = user.empresa_id
+    pedido_teste = Pedidos(
+        carrinho_id=carrinho_teste.id,
+        empresa_id=empresa_user,
+        filial_id=carrinho_teste.filial_id,
+        usuario_id=carrinho_teste.usuario_id,
+        status='PENDENTE'
+    )
     async_session.add(pedido_teste)
     await async_session.commit()
     await async_session.refresh(pedido_teste)
@@ -251,7 +260,20 @@ async def pedido_com_status(
         status=getattr(request, 'param', 'PENDENTE'),
     )
 
+    
+
+
     async_session.add(pedido_teste)
     await async_session.commit()
+
+    pedido_historico = PedidoStatusHistorico(
+        pedido_id=pedido_teste.id,
+        status=getattr(request, 'param', 'PENDENTE'),
+        alterado_por=pedido_teste.usuario_id,
+    ) 
+    
+    async_session.add(pedido_historico)
+    await async_session.commit()
     await async_session.refresh(pedido_teste)
+    
     return pedido_teste
