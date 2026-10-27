@@ -1,6 +1,7 @@
 import datetime
 from decimal import Decimal
 from http import HTTPStatus
+from http.client import HTTP_VERSION_NOT_SUPPORTED
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -22,6 +23,8 @@ from schemas.schema_pedidos import (
     s_pedido_response,
     s_Pedido_Update_create_preventrega,
     s_Pedido_Update_create_status,
+    s_pedido_historico,
+    s_pedido_historico_response
 )
 
 router = APIRouter(prefix='/pedido', tags=['Pedido'])
@@ -323,3 +326,33 @@ async def gerar_previsao_entrega(
     )
 
     return view_api
+
+
+@router.get('/{id_pedido}/historico', status_code=HTTPStatus.OK, response_model=s_pedido_historico_response)
+async def historico_pedido(
+    id_pedido:int,
+    session = Depends(async_get_session)
+):
+    pedido = await session.scalar(
+        select(Pedidos)
+        .where(Pedidos.id == id_pedido)
+    )
+
+    if pedido is None:
+        raise HTTPException(
+            HTTPStatus.NOT_FOUND,
+            detail="Pedido inexistente"
+        )
+    
+
+    pedidos_historico = await session.scalars(
+        select(PedidoStatusHistorico)
+        .where(PedidoStatusHistorico.pedido_id == pedido.id)
+    )
+
+    historico = [
+        s_pedido_historico.model_validate(item)
+        for item in pedidos_historico.all()]
+
+
+    return {"historico":historico}

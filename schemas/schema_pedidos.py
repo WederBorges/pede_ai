@@ -49,3 +49,19 @@ class s_pedido_response(BaseModel):
     itens: list[s_Pedido_Out]
 
     model_config = ConfigDict(from_attributes=True)
+
+class s_pedido_historico(BaseModel):
+        
+    pedido_id: int
+    status: Status_Pedidos
+    observacao: str | None
+    created_at: datetime
+    alterado_por: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+class s_pedido_historico_response(BaseModel):
+   
+    historico: list[s_pedido_historico]
+
+    model_config = ConfigDict(from_attributes=True)

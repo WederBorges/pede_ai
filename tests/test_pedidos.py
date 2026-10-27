@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from models.enums_pedido import Status_Pedidos
 from models.pedidos import Pedidos, PedidoStatusHistorico
-
+from schemas.schema_pedidos import s_pedido_historico, s_pedido_historico_response
 
 @pytest.mark.asyncio
 async def test_create_pedido(client, async_session, carrinho_com_item_teste):
@@ -542,10 +542,23 @@ async def test_historico_pedido_inexistente(client, pedido_com_status):
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json()['detail'] == "Pedido inexistente"
 
+
 @pytest.mark.asyncio
-async def test_historico_pedido(client, pedido_com_status):
+async def test_historico_pedido(client, pedido_com_status, async_session):
 
     response = client.get(f'pedido/{pedido_com_status.id}/historico')
+
+    pedido_validacao={
+        "carrinho_id":pedido_com_status.carrinho_id,
+        "empresa_id":pedido_com_status.empresa_id,
+        "filial_id":pedido_com_status.filial_id,
+        "usuario_id":pedido_com_status.usuario_id,
+        "status":pedido_com_status.status,
+    }
+
     print(response.json())
+    print(pedido_com_status)
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {"historico":pedido_validacao}
 
 
