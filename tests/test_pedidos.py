@@ -7,6 +7,7 @@ from sqlalchemy import select
 from models.enums_pedido import Status_Pedidos
 from models.pedidos import Pedidos, PedidoStatusHistorico
 from schemas.schema_pedidos import s_pedido_historico, s_pedido_historico_response
+from tests.conftest import pedido_com_status
 
 @pytest.mark.asyncio
 async def test_create_pedido(client, async_session, carrinho_com_item_teste):
@@ -544,21 +545,39 @@ async def test_historico_pedido_inexistente(client, pedido_com_status):
 
 
 @pytest.mark.asyncio
-async def test_historico_pedido(client, pedido_com_status, async_session):
+async def test_historico_pedido(
+    client, 
+    pedido_com_status_historico,
+    async_session):
 
-    response = client.get(f'pedido/{pedido_com_status.id}/historico')
+    response = client.get(f'pedido/{pedido_com_status_historico.pedido_id}/historico')
 
     pedido_validacao={
-        "carrinho_id":pedido_com_status.carrinho_id,
-        "empresa_id":pedido_com_status.empresa_id,
-        "filial_id":pedido_com_status.filial_id,
-        "usuario_id":pedido_com_status.usuario_id,
-        "status":pedido_com_status.status,
+        "pedido_id":pedido_com_status_historico.pedido_id,
+        "status":pedido_com_status_historico.status,
+        "observacao": pedido_com_status_historico.observacao,
+        "created_at": pedido_com_status_historico.created_at.isoformat(),
+        "alterado_por": pedido_com_status_historico.alterado_por,
     }
-
-    print(response.json())
-    print(pedido_com_status)
+    
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {"historico":pedido_validacao}
+    assert response.json() == {"historico":[pedido_validacao]}
 
+@pytest.mark.asyncio
+async def test_lista_pedido_inexistente(client):
 
+    response = client.get(f'pedido/lista-pedidos')
+    print(response.json(), "LISTA")
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['detail'] == 'Nenhum pedido encontrado'
+
+@pytest.mark.asyncio
+async def test_lista_pedido(client, pedido_com_status):
+
+    response = client.get(f'pedido/lista-pedidos')
+    print(response.json(), "LISTA")
+    # assert response.status_code == HTTPStatus.OK
+    # assert response.json() == pedido_com_status
+
+# Ajustar o teste, ele precisa bater com o pedido_com_status == response.json()  

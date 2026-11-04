@@ -277,3 +277,40 @@ async def pedido_com_status(
     await async_session.refresh(pedido_teste)
     
     return pedido_teste
+
+
+@pytest_asyncio.fixture
+async def pedido_com_status_historico(
+    carrinho_com_item_teste, async_session, carrinho_teste, request
+):
+    from models.pedidos import Pedidos
+
+    user = await async_session.scalar(
+        select(User).where(User.id == carrinho_teste.usuario_id)
+    )
+    empresa_user = user.empresa_id
+    pedido_teste = Pedidos(
+        carrinho_id=carrinho_teste.id,
+        empresa_id=empresa_user,
+        filial_id=carrinho_teste.filial_id,
+        usuario_id=carrinho_teste.usuario_id,
+        status=getattr(request, 'param', 'PENDENTE'),
+    )
+
+    
+
+
+    async_session.add(pedido_teste)
+    await async_session.commit()
+
+    pedido_historico = PedidoStatusHistorico(
+        pedido_id=pedido_teste.id,
+        status=getattr(request, 'param', 'PENDENTE'),
+        alterado_por=pedido_teste.usuario_id,
+    ) 
+    
+    async_session.add(pedido_historico)
+    await async_session.commit()
+    await async_session.refresh(pedido_teste)
+    
+    return pedido_historico

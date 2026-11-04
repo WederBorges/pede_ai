@@ -2,6 +2,7 @@ import datetime
 from decimal import Decimal
 from http import HTTPStatus
 from http.client import HTTP_VERSION_NOT_SUPPORTED
+from re import S
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -356,3 +357,29 @@ async def historico_pedido(
 
 
     return {"historico":historico}
+
+
+@router.get('/lista-pedidos', status_code=HTTPStatus.OK)
+async def lista_pedido(session=Depends(async_get_session)):
+    
+    pedidos = await session.scalars(
+        select(Pedidos)
+        .order_by(Pedidos.created_at.desc())
+    )
+
+    pedidos_all = pedidos.all()
+    
+    if not pedidos_all:
+        raise HTTPException(
+            HTTPStatus.OK,
+            detail="Nenhum pedido encontrado"
+        )
+
+
+    
+
+    for pedido in pedidos_all:
+
+        
+    return pedidos_all
+    
