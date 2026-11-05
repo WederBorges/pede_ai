@@ -27,6 +27,8 @@ from schemas.schema_pedidos import (
     s_pedido_historico,
     s_pedido_historico_response
 )
+from services.services_pedido import montar_resumo_pedido
+
 
 router = APIRouter(prefix='/pedido', tags=['Pedido'])
 
@@ -165,39 +167,11 @@ async def ler_pedido(id_pedido: int, session=Depends(async_get_session)):
 
     pedido = await session.scalar(select(Pedidos).where(Pedidos.id == id_pedido))
 
-    sub_totais = []
-    pedido_itens_lista = []
 
     if pedido is None:
         raise HTTPException(HTTPStatus.NOT_FOUND, detail='Pedido inexistente')
 
-    pedidos_itens_scalar_result = await session.scalars(
-        select(PedidoItens).where(PedidoItens.pedido_id == pedido.id)
-    )
-
-    pedido_itens_all = pedidos_itens_scalar_result.all()
-    for item in pedido_itens_all:
-        item_out = s_Pedido_Out(
-            id_produto=item.produto_id,
-            nome=item.nome_produto,
-            quantidade=item.quantidade,
-            sub_total=item.preco_unitario * item.quantidade,
-        )
-
-        pedido_itens_lista.append(item_out)
-        sub_totais.append(item.preco_unitario * item.quantidade)
-
-    pedido_response = s_pedido_response(
-        id_pedido=pedido.id,
-        empresa_id=pedido.empresa_id,
-        filial_id=pedido.filial_id,
-        usuario_id=pedido.usuario_id,
-        status=pedido.status,
-        created_at=pedido.created_at,
-        previsao_entrega=pedido.previsao_entrega,
-        valor_total=sum(sub_totais, Decimal(0)),
-        itens=pedido_itens_lista,
-    )
+    pedido_response = await montar_resumo_pedido(session, pedido)
 
     return pedido_response
 
@@ -375,10 +349,6 @@ async def lista_pedido(session=Depends(async_get_session)):
             detail="Nenhum pedido encontrado"
         )
 
-
-    
-
-    for pedido in pedidos_all:
 
         
     return pedidos_all
