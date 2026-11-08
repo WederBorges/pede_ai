@@ -4,9 +4,11 @@ from http import HTTPStatus
 import pytest
 from sqlalchemy import select
 
+from db.sessions import async_get_session
 from models.enums_pedido import Status_Pedidos
 from models.pedidos import Pedidos, PedidoStatusHistorico
-from schemas.schema_pedidos import s_pedido_historico, s_pedido_historico_response
+from schemas.schema_pedidos import s_pedido_response,s_pedido_historico, s_pedido_historico_response
+from services.services_pedido import montar_resumo_pedido
 from tests.conftest import pedido_com_status
 
 @pytest.mark.asyncio
@@ -567,17 +569,38 @@ async def test_historico_pedido(
 async def test_lista_pedido_inexistente(client):
 
     response = client.get(f'pedido/lista-pedidos')
-    print(response.json(), "LISTA")
 
     assert response.status_code == HTTPStatus.OK
     assert response.json()['detail'] == 'Nenhum pedido encontrado'
 
+
 @pytest.mark.asyncio
-async def test_lista_pedido(client, pedido_com_status):
+async def test_lista_pedido(client, async_session ,pedido_com_status, carrinho_com_item_teste, pedido_itens):
 
     response = client.get(f'pedido/lista-pedidos')
-    print(response.json(), "LISTA")
-    # assert response.status_code == HTTPStatus.OK
-    # assert response.json() == pedido_com_status
+
+    
+
+    pedido = {
+        'id_pedido': pedido_com_status.id,
+        'empresa_id': pedido_com_status.empresa_id,
+        'filial_id': pedido_com_status.filial_id,
+        'usuario_id': pedido_com_status.usuario_id,
+        'status': pedido_com_status.status.value,
+        'created_at': pedido_com_status.created_at.isoformat(),
+        'previsao_entrega': None,
+        'valor_total': str(pedido_itens.preco_unitario * pedido_itens.quantidade),
+        'itens': [
+            {
+                'id_produto': pedido_itens.produto_id,
+                'nome': pedido_itens.nome_produto,
+                'quantidade': pedido_itens.quantidade,
+                'sub_total': str(pedido_itens.preco_unitario * pedido_itens.quantidade),
+            }
+        ],
+    }
+    print(pedido)
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == [pedido]
 
 # Ajustar o teste, ele precisa bater com o pedido_com_status == response.json()  

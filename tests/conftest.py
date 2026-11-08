@@ -1,5 +1,6 @@
 import os
 
+import pytest
 from sqlalchemy import select
 
 os.environ.setdefault(
@@ -20,7 +21,7 @@ from models.empresas_e_filiais import Empresas, Filiais
 from models.produtos import Produtos
 from models.usuarios import User
 from models.enums_pedido import Status_Pedidos
-from models.pedidos import PedidoStatusHistorico
+from models.pedidos import PedidoItens, PedidoStatusHistorico
 
 
 @pytest_asyncio.fixture
@@ -211,7 +212,7 @@ async def carrinho_com_item_teste(carrinho_teste, produto_teste, async_session):
     from models.carrinho import CarrinhoItens
 
     carrinho_com_item_teste = CarrinhoItens(
-        carrinho_id=carrinho_teste.id, produto_id=produto_teste.id, quantidade=1
+        carrinho_id=carrinho_teste.id, produto_id=produto_teste.id, quantidade=3
     )
 
     async_session.add(carrinho_com_item_teste)
@@ -314,3 +315,25 @@ async def pedido_com_status_historico(
     await async_session.refresh(pedido_teste)
     
     return pedido_historico
+
+@pytest_asyncio.fixture
+async def pedido_itens(pedido_com_status ,carrinho_com_item_teste, async_session):
+
+    produto = await async_session.scalar(
+        select(Produtos)
+        .where(Produtos.id == carrinho_com_item_teste.produto_id)
+        )
+    
+    pedido_itens =  PedidoItens(
+            pedido_id=pedido_com_status.id,
+            produto_id=carrinho_com_item_teste.produto_id,
+            nome_produto=produto.nome,
+            preco_unitario=produto.preco,
+            quantidade=carrinho_com_item_teste.quantidade
+        )
+
+    async_session.add(pedido_itens)
+    await async_session.commit()
+    await async_session.refresh(pedido_itens)
+    
+    return pedido_itens
