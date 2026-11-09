@@ -599,6 +599,7 @@ async def test_lista_pedido(client, async_session ,pedido_com_status, carrinho_c
             }
         ],
     }
+    
     print(pedido)
     assert response.status_code == HTTPStatus.OK
     assert response.json() == [pedido]
