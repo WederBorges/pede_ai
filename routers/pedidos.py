@@ -1,7 +1,7 @@
 import datetime
 from decimal import Decimal
 from http import HTTPStatus
-
+from services.services_pedido import calcular_previsao_entrega
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -87,7 +87,7 @@ async def criar_pedido(
         filial_id=filial.id,
         usuario_id=carrinho.usuario_id,
         status=Status_Pedidos.PENDENTE,
-        previsao_entrega=None,
+        previsao_entrega=calcular_previsao_entrega(),
         entregue_em=None,
     )
 
@@ -135,7 +135,7 @@ async def criar_pedido(
             usuario_id=pedido.usuario_id,
             status=pedido.status,
             created_at=pedido.created_at,
-            previsao_entrega=None,
+            previsao_entrega=calcular_previsao_entrega(),
             valor_total=sum(vt, Decimal(0)),
             itens=lista_pedido_itens,
         )  # devolve no swagger
@@ -147,12 +147,13 @@ async def criar_pedido(
 
         await session.commit()
 
-    except IntegrityError:
+    except IntegrityError as e:
         await session.rollback()
+        print(f"ERRO AO CRIAR PEDIDO: {e.orig}")
         raise HTTPException(
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail='Erro ao criar o pedido. Verifique os dados fornecidos.',
-        )
+            status_code=500,
+            detail="Erro ao criar o pedido."
+        ) from e
 
     return pedido_response
 

@@ -15,7 +15,8 @@ dependencies = [
     "dotenv (>=0.9.9,<0.10.0)",
     "fastapi[standard] (>=0.139.0,<0.140.0)",
     "pytest (>=9.1.1,<10.0.0)",
-    "pwdlib[argon2] (>=0.3.1,<0.4.0)"
+    "pwdlib[argon2] (>=0.3.1,<0.4.0)",
+    "scalar-fastapi (>=1.9.1,<2.0.0)"
 ]
 
 

@@ -1,7 +1,8 @@
 # Validação rota usuarios ####
 from decimal import Decimal
 from http import HTTPStatus
-
+from datetime import date, timedelta
+import time
 from fastapi import HTTPException
 from sqlalchemy import select
 
@@ -55,3 +56,12 @@ async def montar_resumo_pedido(session: AsyncSession, pedido: Pedidos) -> s_pedi
 
 
     return pedido_response
+
+
+def calcular_previsao_entrega(date_time: date | None = None) -> date:
+    """ Previsão de entrega simples"""
+
+    data_atual = date.today()
+    data_prevista = data_atual + timedelta(days=30)
+
+    return data_prevista
