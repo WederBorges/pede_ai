@@ -43,3 +43,7 @@ async def validar_filial_e_empresas(
             )
 
     return empresa_id, filial_id
+
+
+def gerar_hash_senha(senha_entrada:str) -> str:
+    pass
