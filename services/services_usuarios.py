@@ -1,6 +1,6 @@
 # Validação rota usuarios ####
 from http import HTTPStatus
-
+from pwdlib import PasswordHash
 from fastapi import HTTPException
 from sqlalchemy import select
 
@@ -45,5 +45,11 @@ async def validar_filial_e_empresas(
     return empresa_id, filial_id
 
 
-def gerar_hash_senha(senha_entrada:str) -> str:
-    pass
+password_hash = PasswordHash.recommended()
+def gerar_hash_usuario(senha_entrada: str) -> str:
+    """Gerar hash senha do usuário"""
+    return password_hash.hash(senha_entrada)
+
+def verificar_senha(senha_entrada:str, senha_hash: str) -> bool:
+    """Verifica se o hash bate com a senha"""
+    return password_hash.verify(senha_entrada, senha_hash)

@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from re import M
 
+from fastapi import FastAPI
+from scalar_fastapi import add_scalar_reference, Theme
 from models import categorias
 from routers import (
     carrinho,
@@ -12,7 +14,15 @@ from routers import (
     usuarios,
 )
 
-app = FastAPI()
+app = FastAPI(title="Pede AI")
+
+
+add_scalar_reference(
+    app,
+    route='/scalar',
+    theme=Theme.DEEP_SPACE
+
+)
 
 app.include_router(empresas.router)
 app.include_router(filiais.router)

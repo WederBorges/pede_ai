@@ -1,5 +1,5 @@
 from http import HTTPStatus
-
+from services.services_usuarios import gerar_hash_usuario
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -28,20 +28,21 @@ async def create_user(dados: s_Usuario_created, session=Depends(async_get_sessio
     if email_existente:
         raise HTTPException(HTTPStatus.CONFLICT, detail='Email já cadastrado')
 
-    model = User(
-        nome=dados.nome,
-        email=dados.email,
-        perfil=dados.perfil,
-        senha_hash=dados.senha,
-        empresa_id=dados.empresa_id,
-        filial_id=dados.filial_id,
-    )
 
     await validar_filial_e_empresas(
         session=session,
         dados=dados,
         empresa_id_atual=dados.empresa_id,
         filial_id_atual=dados.filial_id,
+    )
+
+    model = User(
+        nome=dados.nome,
+        email=dados.email,
+        perfil=dados.perfil,
+        senha_hash=gerar_hash_usuario(dados.senha),
+        empresa_id=dados.empresa_id,
+        filial_id=dados.filial_id,
     )
 
     try:
@@ -112,6 +113,9 @@ async def update_user(
     try:
         model = dados.model_dump(exclude_unset=True)
 
+        if 'senha' in model:
+            senha = model.pop('senha')
+            model['senha_hash'] = gerar_hash_usuario(senha) #python executa o de dentro primeiro
         for k, v in model.items():
             setattr(user, k, v)
         await session.commit()
