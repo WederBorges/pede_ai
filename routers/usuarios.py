@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from concurrent.interpreters import get_current
 from services.services_usuarios import gerar_hash_usuario
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -15,12 +16,28 @@ from schemas.schemas_usuario import (
     s_Usuarios_Response,
 )
 from services.services_usuarios import validar_filial_e_empresas
+from services.services_auth import get_current_user
+from models.enums_perfil import Perfis, GESTAO_DE_ACESSOS
 
 router = APIRouter(prefix='/usuarios', tags=['Usuários'])
 
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=s_Usuario_out)
-async def create_user(dados: s_Usuario_created, session=Depends(async_get_session)):
+async def create_user(
+    dados: s_Usuario_created,
+    cred=Depends(get_current_user),
+    session=Depends(async_get_session),
+    ):
+
+    perfil_atual = cred['perfil']
+    permitidos = GESTAO_DE_ACESSOS.get(perfil_atual,[])
+
+    if dados.perfil not in permitidos:
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN,
+            detail='Você não possui permissão'
+        )
+
 
     stmt = select(User).where(User.email == dados.email)
     email_existente = await session.scalar(stmt)

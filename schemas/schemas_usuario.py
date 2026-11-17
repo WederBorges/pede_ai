@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
-
+from models.enums_perfil import Perfis
 
 # d
 # empresa_id
@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict
 class s_Usuario_created(BaseModel):
     nome: str
     email: str
-    perfil: str
+    perfil: Perfis
     senha: str
     empresa_id: int
     filial_id: int | None = None
@@ -26,7 +26,7 @@ class s_Usuario_out(BaseModel):
     id: int
     nome: str
     email: str
-    perfil: str
+    perfil: Perfis
     empresa_id: int
     filial_id: int | None
     created_at: datetime
@@ -37,7 +37,7 @@ class s_Usuario_out(BaseModel):
 class s_Usuario_update_(BaseModel):
     nome: str | None = None
     email: str | None = None
-    perfil: str | None = None
+    perfil: Perfis | None = None
     senha: str | None = None
     empresa_id: int | None = None
     filial_id: int | None = None
@@ -49,7 +49,7 @@ class s_Usuario_Update_out(BaseModel):
     id: int
     nome: str
     email: str
-    perfil: str
+    perfil: Perfis
     empresa_id: int
     filial_id: int | None
     created_at: datetime

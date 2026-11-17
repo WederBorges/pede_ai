@@ -8,12 +8,13 @@
 # created_at
 
 from datetime import datetime
+from email.policy import default
 
 from sqlalchemy import TIMESTAMP, ForeignKey, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
-
+from enums_perfil import Perfis 
 from db.base import Base
-
+from sqlalchemy import (Enum as SQLALCHEMYENUM)
 
 class User(Base):
     __tablename__ = 'usuarios'
@@ -26,7 +27,8 @@ class User(Base):
     nome: Mapped[str] = mapped_column(String(45), nullable=False)
     email: Mapped[str] = mapped_column(String(100), nullable=False)
     senha_hash: Mapped[str] = mapped_column(String(100), nullable=False)
-    perfil: Mapped[str] = mapped_column(String(12), nullable=False)
+    perfil: Mapped[Perfis] = mapped_column(
+        SQLALCHEMYENUM(Perfis),  default=Perfis.USUARIO_FILIAL, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, server_default=func.now(), nullable=False
     )
