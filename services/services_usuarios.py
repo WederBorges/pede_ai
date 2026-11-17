@@ -1,5 +1,6 @@
 # Validação rota usuarios ####
 from http import HTTPStatus
+from os import getenv
 from pwdlib import PasswordHash
 from fastapi import HTTPException
 from sqlalchemy import select

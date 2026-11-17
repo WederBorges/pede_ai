@@ -12,6 +12,7 @@ from routers import (
     pedidos,
     produtos,
     usuarios,
+    auth,
 )
 
 app = FastAPI(title="Pede AI")
@@ -24,6 +25,7 @@ add_scalar_reference(
 
 )
 
+app.include_router(auth.router)
 app.include_router(empresas.router)
 app.include_router(filiais.router)
 app.include_router(usuarios.router)
