@@ -3,6 +3,8 @@ import os
 import pytest
 from sqlalchemy import select
 
+from services.services_auth import get_current_user
+
 os.environ.setdefault(
     'DATABASE_URL',
     'sqlite+aiosqlite:///:memory:',
@@ -12,7 +14,7 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy import StaticPool, event
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-
+from datetime import datetime, timezone, timedelta
 from db.base import Base
 from db.sessions import async_get_session
 from main import app
@@ -22,17 +24,29 @@ from models.produtos import Produtos
 from models.usuarios import User
 from models.enums_pedido import Status_Pedidos
 from models.pedidos import PedidoItens, PedidoStatusHistorico
-
+from models.enums_perfil import Perfis
 
 @pytest_asyncio.fixture
-async def client(async_session):
+async def client(async_session, request):
+
 
     async def get_async_session_override():
         return async_session
 
+    async def user_overrides():
+        return {
+            "id_user": "user_teste",
+            "perfil": getattr(request, 'param', Perfis.USUARIO_CHAVE),
+            "email": "user_teste@example.com.br",
+            "empresa_id": 1,
+            "filial_id": 1,
+            "exp": datetime.now(timezone.utc) + timedelta(days=7)
+        } 
+   
+
     with TestClient(app) as client:
         app.dependency_overrides[async_get_session] = get_async_session_override
-
+        app.dependency_overrides[get_current_user] = user_overrides
         yield client
 
     app.dependency_overrides.clear()
