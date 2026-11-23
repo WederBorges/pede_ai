@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 from ast import Try
-=======
->>>>>>> a04263ded0a51d50fb01137168b3909c5d359873
 from datetime import datetime, timedelta, timezone, tzinfo
 from pydoc import doc
 from typing import Optional
@@ -14,10 +11,7 @@ from http import HTTPStatus
 from fastapi import Depends, HTTPException
 from services.services_usuarios import gerar_hash_usuario, verificar_senha
 import jwt
-<<<<<<< HEAD
 from jwt import DecodeError
-=======
->>>>>>> a04263ded0a51d50fb01137168b3909c5d359873
 from dotenv import load_dotenv
 import os
 import secrets
