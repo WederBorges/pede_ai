@@ -1,5 +1,4 @@
 from http import HTTPStatus
-from concurrent.interpreters import get_current
 from services.services_usuarios import gerar_hash_usuario
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -16,7 +15,7 @@ from schemas.schemas_usuario import (
     s_Usuarios_Response,
 )
 from services.services_usuarios import validar_filial_e_empresas
-from services.services_auth import get_current_user
+from services.services_auth import
 from models.enums_perfil import Perfis, GESTAO_DE_ACESSOS
 
 router = APIRouter(prefix='/usuarios', tags=['Usuários'])

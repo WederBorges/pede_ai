@@ -77,30 +77,8 @@ def gerar_token_usuario(
 
 def decode_token(token: str) -> dict:
 
-<<<<<<< HEAD
-    try:
-        decode = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except (
-        jwt.DecodeError) as e:
-        raise HTTPException(
-            HTTPStatus.UNAUTHORIZED,
-            'Token inválido'
-        ) from e 
-    except jwt.ExpiredSignatureError as e:
-        raise HTTPException(
-            HTTPStatus.UNAUTHORIZED,
-            detail="Token expirado" 
-        ) from e
-    except jwt.InvalidTokenError as e:
-        raise HTTPException(
-            HTTPStatus.UNAUTHORIZED,
-            detail="Token inválido"
-        ) from e
-    
-=======
     decode = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
->>>>>>> a04263ded0a51d50fb01137168b3909c5d359873
     return decode
 
 def get_current_user(token: HTTPAuthorizationCredentials = Depends(esquema)) -> dict:
