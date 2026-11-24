@@ -1,7 +1,5 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from http import HTTPStatus
-from sqlalchemy import select
-from models.usuarios import User
 from schemas.schema_auth_ import s_create_auth ,s_create_auth_out
 from fastapi import Depends
 from db.sessions import async_get_session

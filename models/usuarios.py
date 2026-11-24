@@ -8,11 +8,11 @@
 # created_at
 
 from datetime import datetime
-from email.policy import default
+
 
 from sqlalchemy import TIMESTAMP, ForeignKey, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
-from enums_perfil import Perfis 
+from models.enums_perfil import Perfis 
 from db.base import Base
 from sqlalchemy import (Enum as SQLALCHEMYENUM)
 

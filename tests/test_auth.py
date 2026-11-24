@@ -1,7 +1,10 @@
 from http import HTTPStatus
+from tkinter import NO
 
 from models.enums_perfil import Perfis
 import pytest
+from models.usuarios import User
+from sqlalchemy import select
 
 @pytest.mark.parametrize(
     ('client', 'perfil_requisitado', 'http_esperado'),
@@ -47,17 +50,32 @@ import pytest
 async def test_criar_user_perfis_diferentes(
     async_session,
     client,
-    perfil_usu_atual,
     perfil_requisitado,
     http_esperado,
+    empresa_teste,
+    filial_teste
 ):
 
-    st = {'status': perfil_usu_atual}
-    response = client.patch(f'/pedido/{pedido_com_status.id}/status', json=st)
+    dados = {
+        'nome': 'usuario_teste',
+        'email': 'test_email@xample.com.br',
+        'perfil': perfil_requisitado.value,
+        'senha': 'senha_example',
+        'empresa_id': empresa_teste.id,
+        'filial_id': filial_teste.id
+    }
 
-    pedido_bd = await async_session.scalar(
-        select(Pedidos).where(Pedidos.id == pedido_com_status.id)
-    )
+    response = client.post('/usuarios', json=dados)
 
-    assert http_esperado == response.status_code
-    assert pedido_bd.status == status_esperado
+    assert response.status_code == http_esperado, response.json()
+
+    if response.status_code == HTTPStatus.CREATED:
+        stmt = select(User).where(User.id == response.json()['id'])
+        user = await async_session.scalar(stmt)
+        assert user is not None
+        assert perfil_requisitado == user.perfil
+
+    elif response.status_code == HTTPStatus.FORBIDDEN:
+        stmt = select(User).where(User.email == dados['email'])
+        user = await async_session.scalar(stmt)
+        assert user is None

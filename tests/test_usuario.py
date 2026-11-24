@@ -3,6 +3,7 @@ from http import HTTPStatus
 import pytest
 from sqlalchemy import select
 
+from models.enums_perfil import Perfis
 from models.usuarios import User
 from schemas.schemas_usuario import s_Usuario_out
 
@@ -16,7 +17,7 @@ async def test_create_user(client, async_session, empresa_teste):
         'senha': 'teste',
         'empresa_id': empresa_teste.id,
         'filial_id': None,
-        'perfil': 'TESTE',
+        'perfil': Perfis.USUARIO_FILIAL,
     }
 
     response = client.post('/usuarios', json=dados)
@@ -138,7 +139,7 @@ async def test_filial_vinculada_usuario_inexistente(
             'senha': 'teste123',
             'empresa_id': empresa_teste.id,
             'filial_id': filial_teste.id + 1,
-            'perfil': 'TESTE',
+            'perfil': Perfis.USUARIO_FILIAL,
         },
     )
 
@@ -185,7 +186,7 @@ async def test_usuario_email_duplicado(client, usuario_teste, async_session):
             'senha': 'teste123',
             'empresa_id': usuario_teste.empresa_id,
             'filial_id': usuario_teste.filial_id,
-            'perfil': 'TESTE',
+            'perfil': Perfis.USUARIO_FILIAL,
         },
     )
 
@@ -208,7 +209,7 @@ async def test_update_usuario_email_duplicado(
             'senha': 'teste123',
             'empresa_id': usuario_teste.empresa_id,
             'filial_id': usuario_teste.filial_id,
-            'perfil': 'TESTE',
+            'perfil': Perfis.USUARIO_FILIAL,
         },
     )
 

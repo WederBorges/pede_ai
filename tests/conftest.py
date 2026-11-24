@@ -135,7 +135,7 @@ async def usuario_teste(async_session, empresa_teste, filial_teste):
         senha_hash='senha_teste',
         empresa_id=empresa_teste.id,
         filial_id=filial_teste.id,
-        perfil='colaborador',
+        perfil=Perfis.USUARIO_APOIO,
     )
 
     async_session.add(user)

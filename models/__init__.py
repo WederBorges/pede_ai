@@ -8,3 +8,5 @@ from .pedidos import Pedidos as Pedidos
 from .pedidos import PedidoStatusHistorico as PedidoStatusHistorico
 from .produtos import Produtos as Produtos
 from .usuarios import User as User
+from .enums_perfil import Perfis
+from .enums_pedido import Status_Pedidos
